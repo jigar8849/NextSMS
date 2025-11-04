@@ -34,7 +34,7 @@ export default function ResidentLogin({ error, success }: Props) {
     setLoading(true);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/resident-login`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/admin/resident-login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -43,7 +43,7 @@ export default function ResidentLogin({ error, success }: Props) {
         credentials: "include", // store session cookie
         body: JSON.stringify({
           email,
-          create_password: password, // backend expects 'create_password'
+          password, // passport-local expects 'password'
         }),
       });
 

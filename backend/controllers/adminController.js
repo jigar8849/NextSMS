@@ -295,6 +295,36 @@ const adminLogout = (req, res) => {
   });
 };
 
+const residentLogin = async (req, res, next) => {
+  passport.authenticate('resident-local', (err, user, info) => {
+    if (err) {
+      console.error('Resident login error:', err);
+      return res.status(500).json({ error: 'Internal server error.' });
+    }
+    if (!user) {
+      return res.status(401).json({ error: info?.message || 'Invalid credentials.' });
+    }
+
+    req.logIn(user, (err) => {
+      if (err) {
+        console.error('Resident login session error:', err);
+        return res.status(500).json({ error: 'Login failed.' });
+      }
+
+      res.status(200).json({
+        message: 'Login successful.',
+        redirect: '/resident/dashboard',
+        user: {
+          id: user._id,
+          email: user.email,
+          first_name: user.first_name,
+          last_name: user.last_name,
+        },
+      });
+    });
+  })(req, res, next);
+};
+
 module.exports = {
   createSocietyAccount,
   getAllSocieties,
@@ -304,4 +334,5 @@ module.exports = {
   adminLogin,
   adminLogout,
   addNewResident,
+  residentLogin,
 };

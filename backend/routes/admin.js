@@ -35,4 +35,7 @@ router.post('/logout', adminController.adminLogout);
 // POST /admin/addNewResident - Add new resident
 router.post('/addNewResident', isAuthenticated, adminController.addNewResident);
 
+// POST /resident-login - Resident login
+router.post('/resident-login', adminController.residentLogin);
+
 module.exports = router;
