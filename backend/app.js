@@ -1,0 +1,83 @@
+require('dotenv').config();
+// Override MONGO_URI to use lowercase to avoid case sensitivity issues
+process.env.MONGO_URI = 'mongodb://localhost:27017/nextsms';
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const helmet = require('helmet');
+const compression = require('compression');
+const rateLimit = require('express-rate-limit');
+const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
+
+// Import routes
+const adminRoutes = require('./routes/admin');
+
+const app = express();
+const PORT = process.env.PORT || 5001;
+
+// Security middleware
+app.use(helmet());
+app.use(compression());
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.'
+});
+app.use(limiter);
+
+// CORS configuration
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true
+}));
+
+// Body parsing middleware
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Passport configuration
+app.use(passport.initialize());
+const SocitySetUp = require('./models/socitySetUp');
+passport.use(new LocalStrategy({ usernameField: 'email' }, SocitySetUp.authenticate()));
+passport.serializeUser(SocitySetUp.serializeUser());
+passport.deserializeUser(SocitySetUp.deserializeUser());
+
+// Routes
+app.use('/admin', adminRoutes);
+
+// Health check
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'OK', message: 'Server is running' });
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Something went wrong!' });
+});
+
+// 404 handler
+app.use('*', (req, res) => {
+  res.status(404).json({ error: 'Route not found' });
+});
+
+// Connect to MongoDB
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => {
+  console.log('Connected to MongoDB');
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+})
+.catch((err) => {
+  console.error('MongoDB connection error:', err);
+  process.exit(1);
+});
+
+module.exports = app;
