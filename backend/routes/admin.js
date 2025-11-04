@@ -1,6 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminController');
+const passport = require('passport');
+
+// Middleware to check if admin is authenticated
+const isAuthenticated = (req, res, next) => {
+  if (req.isAuthenticated() && req.user.constructor.modelName === 'SocitySetUp') {
+    return next();
+  }
+  res.status(401).json({ error: 'Unauthorized. Please log in as admin.' });
+};
 
 // POST /admin/create-account - Create new society account
 router.post('/create-account', adminController.createSocietyAccount);
@@ -22,5 +31,8 @@ router.post('/login', adminController.adminLogin);
 
 // POST /admin/logout - Admin logout
 router.post('/logout', adminController.adminLogout);
+
+// POST /admin/addNewResident - Add new resident
+router.post('/addNewResident', isAuthenticated, adminController.addNewResident);
 
 module.exports = router;

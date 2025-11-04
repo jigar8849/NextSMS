@@ -55,9 +55,29 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 const SocitySetUp = require('./models/socitySetUp');
-passport.use(new LocalStrategy({ usernameField: 'email' }, SocitySetUp.authenticate()));
-passport.serializeUser(SocitySetUp.serializeUser());
-passport.deserializeUser(SocitySetUp.deserializeUser());
+const NewMember = require('./models/newMember');
+passport.use('society-local', new LocalStrategy({ usernameField: 'email' }, SocitySetUp.authenticate()));
+passport.use('resident-local', new LocalStrategy({ usernameField: 'email' }, NewMember.authenticate()));
+passport.serializeUser((user, done) => {
+  done(null, { id: user._id, type: user.constructor.modelName });
+});
+passport.deserializeUser(async (serializedUser, done) => {
+  try {
+    const { id, type } = serializedUser;
+    let UserModel;
+    if (type === 'SocitySetUp') {
+      UserModel = SocitySetUp;
+    } else if (type === 'NewMember') {
+      UserModel = NewMember;
+    } else {
+      return done(new Error('Unknown user type'));
+    }
+    const user = await UserModel.findById(id);
+    done(null, user);
+  } catch (err) {
+    done(err);
+  }
+});
 
 // Routes
 app.use('/admin', adminRoutes);

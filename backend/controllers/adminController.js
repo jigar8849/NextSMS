@@ -1,4 +1,5 @@
 const SocitySetUp = require('../models/socitySetUp');
+const NewMember = require('../models/newMember');
 const mongoose = require('mongoose');
 
 // Create society account (admin registration)
@@ -174,7 +175,7 @@ const deleteSociety = async (req, res) => {
 const passport = require('passport');
 
 const adminLogin = async (req, res, next) => {
-  passport.authenticate('local', (err, user, info) => {
+  passport.authenticate('society-local', (err, user, info) => {
     if (err) {
       console.error('Login error:', err);
       return res.status(500).json({ error: 'Internal server error.' });
@@ -203,6 +204,87 @@ const adminLogin = async (req, res, next) => {
   })(req, res, next);
 };
 
+// Add new resident member
+const addNewResident = async (req, res) => {
+  try {
+    const {
+      first_name,
+      last_name,
+      birth_date,
+      mobile_number,
+      emergency_number,
+      number_of_member,
+      name_of_each_member,
+      block,
+      floor_number,
+      flat_number,
+      email,
+      create_password,
+      two_wheeler,
+      four_wheeler,
+      status = 'active',
+      role = 'resident'
+    } = req.body;
+
+    // Validation
+    if (!first_name || !last_name || !email || !create_password) {
+      return res.status(400).json({ error: 'Required fields are missing' });
+    }
+
+    if (create_password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters long' });
+    }
+
+    // Check if resident email already exists
+    const existingResident = await NewMember.findOne({ email });
+    if (existingResident) {
+      return res.status(409).json({ error: 'Resident with this email already exists' });
+    }
+
+    // Create new resident
+    const newResident = new NewMember({
+      first_name,
+      last_name,
+      birth_date,
+      mobile_number,
+      emergency_number,
+      number_of_member,
+      name_of_each_member,
+      block,
+      floor_number,
+      flat_number,
+      email,
+      two_wheeler,
+      four_wheeler,
+      status,
+      role,
+      society: req.user._id // Associate with logged-in admin's society
+    });
+
+    // Register with passport-local-mongoose (handles password hashing)
+    await NewMember.register(newResident, create_password);
+
+    // Fetch the created document to get the ID
+    const createdResident = await NewMember.findOne({ email });
+
+    res.status(201).json({
+      ok: true,
+      message: 'Resident added successfully',
+      id: createdResident._id
+    });
+
+  } catch (error) {
+    console.error('Error adding new resident:', error);
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ error: 'Validation failed', details: error.errors });
+    }
+    if (error.name === 'UserExistsError') {
+      return res.status(409).json({ error: 'User already exists' });
+    }
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 const adminLogout = (req, res) => {
   req.logout((err) => {
     if (err) {
@@ -221,4 +303,5 @@ module.exports = {
   deleteSociety,
   adminLogin,
   adminLogout,
+  addNewResident,
 };
