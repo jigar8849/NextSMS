@@ -17,4 +17,10 @@ router.put('/societies/:id', adminController.updateSociety);
 // DELETE /admin/societies/:id - Delete society
 router.delete('/societies/:id', adminController.deleteSociety);
 
+// POST /admin/login - Admin login
+router.post('/login', adminController.adminLogin);
+
+// POST /admin/logout - Admin logout
+router.post('/logout', adminController.adminLogout);
+
 module.exports = router;

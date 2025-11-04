@@ -42,7 +42,7 @@ export default function AdminLogin({ error, success }: Props) {
     setLoading(true);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/admin-login`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/admin/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -51,7 +51,7 @@ export default function AdminLogin({ error, success }: Props) {
         credentials: "include", // keep session cookie
         body: JSON.stringify({
           email,
-          create_password: password, // backend expects 'create_password'
+          password, // backend expects 'password'
         }),
       });
 

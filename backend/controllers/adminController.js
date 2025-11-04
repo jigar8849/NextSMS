@@ -171,10 +171,54 @@ const deleteSociety = async (req, res) => {
   }
 };
 
+const passport = require('passport');
+
+const adminLogin = async (req, res, next) => {
+  passport.authenticate('local', (err, user, info) => {
+    if (err) {
+      console.error('Login error:', err);
+      return res.status(500).json({ error: 'Internal server error.' });
+    }
+    if (!user) {
+      return res.status(401).json({ error: info?.message || 'Invalid credentials.' });
+    }
+
+    req.logIn(user, (err) => {
+      if (err) {
+        console.error('Login session error:', err);
+        return res.status(500).json({ error: 'Login failed.' });
+      }
+
+      res.status(200).json({
+        message: 'Login successful.',
+        redirect: '/admin/dashboard',
+        user: {
+          id: user._id,
+          email: user.email,
+          socity_name: user.socity_name,
+          admin_name: user.admin_name,
+        },
+      });
+    });
+  })(req, res, next);
+};
+
+const adminLogout = (req, res) => {
+  req.logout((err) => {
+    if (err) {
+      console.error('Logout error:', err);
+      return res.status(500).json({ error: 'Logout failed.' });
+    }
+    res.status(200).json({ message: 'Logged out successfully.' });
+  });
+};
+
 module.exports = {
   createSocietyAccount,
   getAllSocieties,
   getSocietyById,
   updateSociety,
-  deleteSociety
+  deleteSociety,
+  adminLogin,
+  adminLogout,
 };
