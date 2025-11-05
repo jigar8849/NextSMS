@@ -41,6 +41,9 @@ router.post('/createBill', adminController.createBill);
 // POST /resident-login - Resident login
 router.post('/resident-login', adminController.residentLogin);
 
+// POST /admin/addNewEmployee - Add new employee
+router.post('/addNewEmployee', adminController.addNewEmployee);
+
 // GET /admin/employees - Get all employees for the logged-in admin's society
 router.get('/employees', isAuthenticated, adminController.getEmployees);
 

@@ -7,7 +7,7 @@ type EmployeeRole =
   | 'Security Guard'
   | 'Plumber'
   | 'Gardener'
-  | 'Cleaner'
+  | 'Housekeeping'
   | 'Other';
 
 type EmployeeStatus = 'Active' | 'Inactive';
@@ -15,8 +15,8 @@ type EmployeeStatus = 'Active' | 'Inactive';
 export default function AddEmployeeForm() {
   const router = useRouter();
 
-  const API_BASE = process.env.NEXT_PUBLIC_API_BASE || '';
-  const API_PATH = '/admin/addNewEmployee';
+  const API_BASE = '';
+  const API_PATH = '/api/admin/addNewEmployee';
 
   const [name, setName] = useState('');
   const [role, setRole] = useState<EmployeeRole | ''>('');
@@ -69,6 +69,7 @@ export default function AddEmployeeForm() {
       join_date: joinDate, // map to schema field
       location: location.trim(),
       status,
+      society: '507f1f77bcf86cd799439011', // Temporary hardcoded society ID for testing
     };
 
     // Final safety check for numeric fields
@@ -210,7 +211,6 @@ export default function AddEmployeeForm() {
               >
                 <option value="">Select Status</option>
                 <option>Active</option>
-                <option>On Leave</option>
                 <option>Inactive</option>
               </select>
             </div>

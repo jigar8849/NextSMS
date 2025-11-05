@@ -1,27 +1,8 @@
-# TODO: Integrate CreateBill Form with Backend
+# TODO: Implement Add Employee Form Posting to Database
 
-## Steps to Complete
-
-1. **Add createBill function in adminController.js**
-   - Import AdminBillTemplate model
-   - Create async function createBill
-   - Validate required fields: title, type, amount, dueDate
-   - Parse amount and penalty to numbers
-   - Set createdBy to req.user._id
-   - Save new bill to DB
-   - Return success response or error
-
-2. **Add POST /createBill route in admin.js**
-   - Import adminController.createBill
-   - Add router.post('/createBill', isAuthenticated, adminController.createBill);
-
-3. **Test the integration**
-   - Run backend server
-   - Submit form from frontend
-   - Check if bill is created in DB
-   - Verify redirect to /admin/payments
-
-## Progress
-- [x] Step 1: Add createBill function
-- [x] Step 2: Add route
-- [x] Step 3: Test integration
+- [x] Update frontend/src/components/admin/forms/AddEmployee.tsx: Change status 'On Leave' to 'Inactive', role 'Cleaner' to 'Housekeeping'
+- [x] Add addNewEmployee function in backend/controllers/adminController.js: Validate fields, create Employee with society ID, save to DB
+- [x] Add POST /admin/addNewEmployee route in backend/routes/admin.js with isAuthenticated middleware
+- [x] Create Next.js API route at /api/admin/addNewEmployee to proxy requests with authentication
+- [x] Update frontend form to use Next.js API route instead of direct backend call
+- [x] Test form submission to ensure data posts correctly to the database

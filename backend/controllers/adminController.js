@@ -375,6 +375,64 @@ const residentLogin = async (req, res, next) => {
   })(req, res, next);
 };
 
+// Add new employee
+const addNewEmployee = async (req, res) => {
+  try {
+    const {
+      name,
+      role,
+      contact,
+      salary,
+      join_date,
+      location,
+      status
+    } = req.body;
+
+    // Validation
+    if (!name || !role || !contact || !salary || !join_date || !location || !status) {
+      return res.status(400).json({ error: 'All fields are required' });
+    }
+
+    const parsedContact = Number(contact);
+    const parsedSalary = Number(salary);
+
+    if (isNaN(parsedContact) || parsedContact <= 0) {
+      return res.status(400).json({ error: 'Invalid contact number' });
+    }
+
+    if (isNaN(parsedSalary) || parsedSalary <= 0) {
+      return res.status(400).json({ error: 'Invalid salary amount' });
+    }
+
+    // Create new employee
+    const newEmployee = new Employee({
+      name: name.trim(),
+      role,
+      contact: parsedContact,
+      salary: parsedSalary,
+      join_date: new Date(join_date),
+      location: location.trim(),
+      status,
+      society: req.body.society || req.user?._id // Use provided society or logged-in admin's society
+    });
+
+    await newEmployee.save();
+
+    res.status(201).json({
+      ok: true,
+      message: 'Employee added successfully',
+      employee: newEmployee
+    });
+
+  } catch (error) {
+    console.error('Error adding new employee:', error);
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ error: 'Validation failed', details: error.errors });
+    }
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 // Get all employees for the logged-in admin's society
 const getEmployees = async (req, res) => {
   try {
@@ -417,5 +475,6 @@ module.exports = {
   addNewResident,
   createBill,
   residentLogin,
+  addNewEmployee,
   getEmployees,
 };
