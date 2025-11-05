@@ -1,5 +1,6 @@
 const SocitySetUp = require('../models/socitySetUp');
 const NewMember = require('../models/newMember');
+const AdminBillTemplate = require('../models/adminBill');
 const mongoose = require('mongoose');
 
 // Create society account (admin registration)
@@ -295,6 +296,54 @@ const adminLogout = (req, res) => {
   });
 };
 
+// Create bill template
+const createBill = async (req, res) => {
+  try {
+    const { title, type, amount, penalty, dueDate } = req.body;
+
+    // Validation
+    if (!title || !type || !amount || !dueDate) {
+      return res.status(400).json({ error: 'Required fields are missing' });
+    }
+
+    const parsedAmount = parseFloat(amount);
+    const parsedPenalty = penalty ? parseFloat(penalty) : 0;
+
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      return res.status(400).json({ error: 'Invalid amount' });
+    }
+
+    if (isNaN(parsedPenalty) || parsedPenalty < 0) {
+      return res.status(400).json({ error: 'Invalid penalty' });
+    }
+
+    // Create new bill template
+    const newBill = new AdminBillTemplate({
+      title: title.trim(),
+      type,
+      amount: parsedAmount,
+      penalty: parsedPenalty,
+      dueDate: new Date(dueDate),
+      createdBy: req.user ? req.user._id : null // Admin's society ID, optional for now
+    });
+
+    await newBill.save();
+
+    res.status(201).json({
+      ok: true,
+      message: 'Bill created successfully',
+      bill: newBill
+    });
+
+  } catch (error) {
+    console.error('Error creating bill:', error);
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ error: 'Validation failed', details: error.errors });
+    }
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 const residentLogin = async (req, res, next) => {
   passport.authenticate('resident-local', (err, user, info) => {
     if (err) {
@@ -334,5 +383,6 @@ module.exports = {
   adminLogin,
   adminLogout,
   addNewResident,
+  createBill,
   residentLogin,
 };

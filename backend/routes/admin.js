@@ -35,6 +35,9 @@ router.post('/logout', adminController.adminLogout);
 // POST /admin/addNewResident - Add new resident
 router.post('/addNewResident', isAuthenticated, adminController.addNewResident);
 
+// POST /admin/createBill - Create bill template
+router.post('/createBill', adminController.createBill);
+
 // POST /resident-login - Resident login
 router.post('/resident-login', adminController.residentLogin);
 
