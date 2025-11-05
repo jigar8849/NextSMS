@@ -18,7 +18,7 @@ export default function NewComplaintPage() {
     e.preventDefault();
     setMessage(null); // Clear previous message
     try {
-      const response = await fetch('http://localhost:3001/resident/api/complaints', {
+      const response = await fetch('/api/resident/complaints', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

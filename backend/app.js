@@ -13,6 +13,7 @@ const LocalStrategy = require('passport-local').Strategy;
 
 // Import routes
 const adminRoutes = require('./routes/admin');
+const residentRoutes = require('./routes/resident');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -81,6 +82,7 @@ passport.deserializeUser(async (serializedUser, done) => {
 
 // Routes
 app.use('/admin', adminRoutes);
+app.use('/resident', residentRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
