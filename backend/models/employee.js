@@ -31,6 +31,11 @@ const employeesSchema = new Schema({
     location : {
         type : String,
         required : true
+    },
+    society: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'SocitySetUp',
+        required: true
     }
 });
 

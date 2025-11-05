@@ -1,6 +1,7 @@
 const SocitySetUp = require('../models/socitySetUp');
 const NewMember = require('../models/newMember');
 const AdminBillTemplate = require('../models/adminBill');
+const Employee = require('../models/employee');
 const mongoose = require('mongoose');
 
 // Create society account (admin registration)
@@ -374,6 +375,37 @@ const residentLogin = async (req, res, next) => {
   })(req, res, next);
 };
 
+// Get all employees for the logged-in admin's society
+const getEmployees = async (req, res) => {
+  try {
+    const societyId = req.user._id; // Assuming req.user is the logged-in admin
+
+    // Fetch employees for the society
+    const employees = await Employee.find({ society: societyId });
+
+    // Calculate stats
+    const totalEmployees = employees.length;
+    const totalActiveEmployees = employees.filter(emp => emp.status === 'Active').length;
+    const totalInactiveEmployees = totalEmployees - totalActiveEmployees;
+    const totalSalaryAmount = employees.reduce((sum, emp) => sum + emp.salary, 0);
+
+    const stats = {
+      totalEmployees,
+      totalActiveEmployees,
+      totalInactiveEmployees,
+      totalSalaryAmount
+    };
+
+    res.status(200).json({
+      employees,
+      stats
+    });
+  } catch (error) {
+    console.error('Error fetching employees:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 module.exports = {
   createSocietyAccount,
   getAllSocieties,
@@ -385,4 +417,5 @@ module.exports = {
   addNewResident,
   createBill,
   residentLogin,
+  getEmployees,
 };

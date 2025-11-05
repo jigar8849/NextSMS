@@ -101,8 +101,8 @@ export default function AddEmployeeForm() {
       setLocalSuccess(body?.message || 'Employee added successfully');
       // Redirect after success
       router.push('/admin/employees');
-    } catch (err: any) {
-      setLocalError(err?.message || 'Network error');
+    } catch (err) {
+      setLocalError(err instanceof Error ? err.message : 'Network error');
     } finally {
       setLoading(false);
     }
@@ -113,9 +113,9 @@ export default function AddEmployeeForm() {
       <div className="mx-auto w-full max-w-5xl">
         <h1 className="text-3xl font-extrabold text-gray-900 mb-6">Add New Employee</h1>
 
-        {error && (
+        {localError && (
           <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {error}
+            {localError}
           </div>
         )}
 
