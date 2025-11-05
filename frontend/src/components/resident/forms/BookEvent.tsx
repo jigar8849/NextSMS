@@ -28,7 +28,7 @@ export default function NewEventPage() {
     setMessage(null);
 
     try {
-      const response = await fetch('http://localhost:3001/resident/api/events', {
+      const response = await fetch('/api/resident/events', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

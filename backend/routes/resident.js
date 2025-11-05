@@ -14,4 +14,7 @@ const isAuthenticated = (req, res, next) => {
 // POST /resident/api/complaints - Add new complaint
 router.post('/api/complaints', residentController.addComplaint);
 
+// POST /resident/api/events - Add new event
+router.post('/api/events', residentController.addEvent);
+
 module.exports = router;
