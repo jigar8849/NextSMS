@@ -17,4 +17,7 @@ router.post('/api/complaints', residentController.addComplaint);
 // POST /resident/api/events - Add new event
 router.post('/api/events', residentController.addEvent);
 
+// GET /resident/parking - Get parking data for the logged-in resident's society
+router.get('/parking', isAuthenticated, residentController.getParking);
+
 module.exports = router;

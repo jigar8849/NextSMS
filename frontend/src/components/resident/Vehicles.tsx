@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Car,
@@ -15,38 +15,26 @@ import {
 /* ---------------- types ---------------- */
 type VehicleType = "2-wheeler" | "4-wheeler";
 type Vehicle = {
-  id: string;
-  regNo: string;
+  reg: string;
   type: VehicleType;
 };
 
-type RecordItem = {
+type Resident = {
   id: string;
+  name: string;
+  phone: string;
+  block: string;
+  flat: number;
   vehicles: Vehicle[];
-  owner: {
-    name: string;
-    flat: string; // e.g., "Block D - 11"
-    phone: string;
-    email: string;
-  };
 };
 
-/* ---------------- demo data ---------------- */
-const DATA: RecordItem[] = [
-  {
-    id: "r1",
-    vehicles: [
-      { id: "v1", regNo: "GJ-01-KY-43533", type: "4-wheeler" },
-      { id: "v2", regNo: "GJ-01-XW-5434", type: "2-wheeler" },
-    ],
-    owner: {
-      name: "Jigar Prajapati",
-      flat: "Block D - 11",
-      phone: "+91 8849602896",
-      email: "jigar@gmail.com",
-    },
-  },
-];
+type ParkingData = {
+  totalTwoWheelerSlots: number;
+  totalFourWheelerSlots: number;
+  occupiedTwoWheeler: number;
+  occupiedFourWheeler: number;
+  residents: Resident[];
+};
 
 const typeBadge = (t: VehicleType) =>
   t === "2-wheeler"
@@ -57,19 +45,43 @@ const typeBadge = (t: VehicleType) =>
 export default function VehicleSearchPage() {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<"all" | VehicleType>("all");
+  const [parkingData, setParkingData] = useState<ParkingData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchParkingData = async () => {
+      try {
+        const response = await fetch('/api/resident/parking');
+        if (!response.ok) {
+          throw new Error('Failed to fetch parking data');
+        }
+        const data = await response.json();
+        setParkingData(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchParkingData();
+  }, []);
 
   // Flat counts for stat cards
   const stats = useMemo(() => {
-    const allVehicles = DATA.flatMap((r) => r.vehicles);
+    if (!parkingData) return { total: 0, two: 0, four: 0 };
+    const allVehicles = parkingData.residents.flatMap((r) => r.vehicles);
     const two = allVehicles.filter((v) => v.type === "2-wheeler").length;
     const four = allVehicles.filter((v) => v.type === "4-wheeler").length;
     return { total: allVehicles.length, two, four };
-  }, []);
+  }, [parkingData]);
 
   // Filtered list
   const results = useMemo(() => {
+    if (!parkingData) return [];
     const q = query.trim().toLowerCase();
-    return DATA.filter((rec) => {
+    return parkingData.residents.filter((rec) => {
       const matchesFilter =
         filter === "all" ||
         rec.vehicles.some((v) => v.type === filter);
@@ -78,14 +90,38 @@ export default function VehicleSearchPage() {
       if (!q) return true;
 
       const hitVehicle = rec.vehicles.some((v) =>
-        v.regNo.toLowerCase().includes(q)
+        v.reg.toLowerCase().includes(q)
       );
       const hitOwner =
-        rec.owner.name.toLowerCase().includes(q) ||
-        rec.owner.flat.toLowerCase().includes(q);
+        rec.name.toLowerCase().includes(q) ||
+        `${rec.block} - ${rec.flat}`.toLowerCase().includes(q);
       return hitVehicle || hitOwner;
     });
-  }, [query, filter]);
+  }, [query, filter, parkingData]);
+
+  if (loading) {
+    return (
+      <div className="p-6 mt-15">
+        <div className="text-center">Loading vehicle data...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 mt-15">
+        <div className="text-center text-red-500">Error: {error}</div>
+      </div>
+    );
+  }
+
+  if (!parkingData) {
+    return (
+      <div className="p-6 mt-15">
+        <div className="text-center">No vehicle data available</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 mt-15">
@@ -123,7 +159,7 @@ export default function VehicleSearchPage() {
 
           <select
             value={filter}
-            onChange={(e) => setFilter(e.target.value as any)}
+            onChange={(e) => setFilter(e.target.value as "all" | "2-wheeler" | "4-wheeler")}
             className="h-11 rounded-lg border border-gray-300 px-3 text-sm outline-none focus:ring-2 focus:ring-blue-600"
             aria-label="Filter vehicle type"
           >
@@ -186,13 +222,13 @@ function StatCard({
   );
 }
 
-function ResultCard({ rec }: { rec: RecordItem }) {
+function ResultCard({ rec }: { rec: Resident }) {
   return (
     <article className="rounded-xl border  border-gray-100 p-4 sm:flex sm:justify-between sm:gap-8">
       {/* left: vehicles list */}
       <div className="flex-1">
         {rec.vehicles.map((v) => (
-          <div key={v.id} className="mb-4 last:mb-0">
+          <div key={v.reg} className="mb-4 last:mb-0">
             <div className="flex items-center gap-3">
               {v.type === "2-wheeler" ? (
                 <Bike className="h-6 w-6 text-emerald-700" />
@@ -200,7 +236,7 @@ function ResultCard({ rec }: { rec: RecordItem }) {
                 <Car className="h-6 w-6 text-blue-700" />
               )}
 
-              <h3 className="text-lg font-semibold text-gray-900">{v.regNo}</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{v.reg}</h3>
               <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${typeBadge(v.type)}`}>
                 {v.type}
               </span>
@@ -215,39 +251,33 @@ function ResultCard({ rec }: { rec: RecordItem }) {
           <div className="inline-flex items-center gap-2">
             <User className="h-4 w-4 text-gray-500" />
             <span>
-              <span className="font-semibold">Owner :</span> {rec.owner.name}
+              <span className="font-semibold">Owner :</span> {rec.name}
             </span>
           </div>
           <div className="inline-flex items-center gap-2">
             <Home className="h-4 w-4 text-gray-500" />
             <span>
-              <span className="font-semibold">Flat :</span> {rec.owner.flat}
+              <span className="font-semibold">Flat :</span> {rec.block} - {rec.flat}
             </span>
           </div>
           <div className="inline-flex items-center gap-2">
             <Phone className="h-4 w-4 text-gray-500" />
-            <a className="font-semibold hover:underline" href={`tel:${rec.owner.phone.replace(/\s+/g, "")}`}>
-              {rec.owner.phone}
-            </a>
-          </div>
-          <div className="inline-flex items-center gap-2">
-            <Mail className="h-4 w-4 text-gray-500" />
-            <a className="hover:underline" href={`mailto:${rec.owner.email}`}>
-              {rec.owner.email}
+            <a className="font-semibold hover:underline" href={`tel:${rec.phone.replace(/\s+/g, "")}`}>
+              {rec.phone}
             </a>
           </div>
         </div>
 
         <div className="mt-4 flex flex-wrap gap-3">
           <a
-            href={`tel:${rec.owner.phone.replace(/\s+/g, "")}`}
+            href={`tel:${rec.phone.replace(/\s+/g, "")}`}
             className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-blue-700"
           >
             Contact Owner
           </a>
           <Link
             href={`/resident/complaints?subject=${encodeURIComponent(
-              `Vehicle issue for ${rec.vehicles[0]?.regNo}`
+              `Vehicle issue for ${rec.vehicles[0]?.reg}`
             )}`}
             className="inline-flex items-center justify-center rounded-lg bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-800 ring-1 ring-inset ring-gray-200 hover:bg-gray-200"
           >
