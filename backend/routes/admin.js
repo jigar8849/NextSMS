@@ -53,4 +53,7 @@ router.get('/api/residents', isAuthenticated, adminController.getResidents);
 // DELETE /admin/residents/:id - Delete a resident by ID
 router.delete('/residents/:id', isAuthenticated, adminController.deleteResident);
 
+// GET /admin/parking - Get parking data for the logged-in admin's society
+router.get('/parking', isAuthenticated, adminController.getParking);
+
 module.exports = router;

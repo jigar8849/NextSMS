@@ -505,6 +505,64 @@ const deleteResident = async (req, res) => {
   }
 };
 
+// Get parking data for the logged-in admin's society
+const getParking = async (req, res) => {
+  try {
+    const societyId = req.user._id; // Assuming req.user is the logged-in admin
+
+    // Fetch society details for slot totals
+    const society = await SocitySetUp.findById(societyId);
+    if (!society) {
+      return res.status(404).json({ error: 'Society not found' });
+    }
+
+    // Fetch residents with vehicles
+    const residents = await NewMember.find({
+      society: societyId,
+      $or: [
+        { two_wheeler: { $exists: true, $ne: '' } },
+        { four_wheeler: { $exists: true, $ne: '' } }
+      ]
+    });
+
+    // Map residents to the required format
+    const residentsWithVehicles = residents.map(resident => ({
+      id: resident._id.toString(),
+      name: `${resident.first_name} ${resident.last_name}`,
+      phone: resident.mobile_number.toString(),
+      block: resident.block,
+      flat: resident.flat_number,
+      vehicles: [
+        ...(resident.two_wheeler ? [{ reg: resident.two_wheeler, type: '2-wheeler' }] : []),
+        ...(resident.four_wheeler ? [{ reg: resident.four_wheeler, type: '4-wheeler' }] : [])
+      ]
+    }));
+
+    // Calculate occupied slots
+    const occupied2 = residentsWithVehicles.reduce(
+      (n, r) => n + r.vehicles.filter((v) => v.type === '2-wheeler').length,
+      0
+    );
+    const occupied4 = residentsWithVehicles.reduce(
+      (n, r) => n + r.vehicles.filter((v) => v.type === '4-wheeler').length,
+      0
+    );
+
+    const parkingData = {
+      totalTwoWheelerSlots: society.total_two_wheeler_slot,
+      totalFourWheelerSlots: society.total_four_wheeler_slot,
+      occupiedTwoWheeler: occupied2,
+      occupiedFourWheeler: occupied4,
+      residents: residentsWithVehicles
+    };
+
+    res.status(200).json(parkingData);
+  } catch (error) {
+    console.error('Error fetching parking data:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 module.exports = {
   createSocietyAccount,
   getAllSocieties,
@@ -520,4 +578,5 @@ module.exports = {
   getEmployees,
   getResidents,
   deleteResident,
+  getParking,
 };

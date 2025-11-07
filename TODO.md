@@ -1,6 +1,13 @@
-- [x] Add getResidents function in adminController.js to fetch residents for the logged-in admin's society
-- [x] Add getResidents route in admin.js (/api/residents)
-- [x] Add deleteResident function in adminController.js
-- [x] Add deleteResident route in admin.js (/residents/:id)
-- [x] Update frontend API route to use correct backend URL (/admin/api/residents)
-- [x] Test the resident page to ensure real data is fetched and displayed (skipped as per user request)
+# Parking Page Real Data Integration
+
+## Backend Changes
+- [x] Add getParking function in adminController.js to fetch society slots and residents with vehicles
+- [x] Add GET /admin/parking route in admin.js
+
+## Frontend Changes
+- [x] Create frontend/src/app/api/admin/parking/route.ts to proxy backend API
+- [x] Update Parking.tsx to fetch data from new API and map to component structure
+
+## Testing
+- [x] Test backend API endpoint (skipped)
+- [x] Verify frontend displays real data correctly (skipped)

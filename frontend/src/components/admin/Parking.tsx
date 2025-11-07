@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Search,
   Bike,
@@ -18,12 +18,20 @@ type Vehicle = {
 };
 
 type Resident = {
-  id: number;
+  id: string;
   name: string;
   phone: string;
-  block: string; // e.g. "Block D"
-  flat: string;  // e.g. "11"
+  block: string;
+  flat: number;
   vehicles: Vehicle[];
+};
+
+type ParkingData = {
+  totalTwoWheelerSlots: number;
+  totalFourWheelerSlots: number;
+  occupiedTwoWheeler: number;
+  occupiedFourWheeler: number;
+  residents: Resident[];
 };
 
 export default function ParkingManagement() {
@@ -31,47 +39,39 @@ export default function ParkingManagement() {
   const [vehicleFilter, setVehicleFilter] = useState<
     "all" | "2-wheeler" | "4-wheeler"
   >("all");
+  const [parkingData, setParkingData] = useState<ParkingData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // --- Mock data (replace with your data) ---
-  const twoWTotal = 3;
-  const fourWTotal = 32;
-  const data: Resident[] = [
-    {
-      id: 1,
-      name: "Jigar Prajapati",
-      phone: "+91 8849602896",
-      block: "Block D",
-      flat: "11",
-      vehicles: [
-        { reg: "GJ-01-KY-43533", type: "4-wheeler" },
-        { reg: "GJ-01-XW-5434", type: "2-wheeler" },
-      ],
-    },
-  ];
+  useEffect(() => {
+    const fetchParkingData = async () => {
+      try {
+        const response = await fetch('/api/admin/parking');
+        if (!response.ok) {
+          throw new Error('Failed to fetch parking data');
+        }
+        const data = await response.json();
+        setParkingData(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // derived values
-  const occupied2 = data.reduce(
-    (n, r) => n + r.vehicles.filter((v) => v.type === "2-wheeler").length,
-    0
-  );
-  const occupied4 = data.reduce(
-    (n, r) => n + r.vehicles.filter((v) => v.type === "4-wheeler").length,
-    0
-  );
-  const available4 = Math.max(0, fourWTotal - occupied4);
-  const occRate = Math.round(
-    ((occupied2 + occupied4) / (twoWTotal + fourWTotal)) * 100
-  );
+    fetchParkingData();
+  }, []);
 
-  // filtering
+  // filtering - always call useMemo in the same order
   const results = useMemo(() => {
+    if (!parkingData) return [];
     const q = search.toLowerCase().trim();
-    return data.filter((r) => {
+    return parkingData.residents.filter((r) => {
       const matchesText =
         !q ||
         r.name.toLowerCase().includes(q) ||
         r.block.toLowerCase().includes(q) ||
-        r.flat.toLowerCase().includes(q) ||
+        r.flat.toString().toLowerCase().includes(q) ||
         r.vehicles.some((v) => v.reg.toLowerCase().includes(q));
 
       const matchesType =
@@ -80,7 +80,39 @@ export default function ParkingManagement() {
 
       return matchesText && matchesType;
     });
-  }, [search, vehicleFilter, data]);
+  }, [search, vehicleFilter, parkingData]);
+
+  if (loading) {
+    return (
+      <div className="p-6 mt-15">
+        <div className="text-center">Loading parking data...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 mt-15">
+        <div className="text-center text-red-500">Error: {error}</div>
+      </div>
+    );
+  }
+
+  if (!parkingData) {
+    return (
+      <div className="p-6 mt-15">
+        <div className="text-center">No parking data available</div>
+      </div>
+    );
+  }
+
+  const { totalTwoWheelerSlots, totalFourWheelerSlots, occupiedTwoWheeler, occupiedFourWheeler, residents } = parkingData;
+
+  // derived values
+  const available4 = Math.max(0, totalFourWheelerSlots - occupiedFourWheeler);
+  const occRate = Math.round(
+    ((occupiedTwoWheeler + occupiedFourWheeler) / (totalTwoWheelerSlots + totalFourWheelerSlots)) * 100
+  );
 
   return (
     <div className="p-6 mt-15">
@@ -94,7 +126,7 @@ export default function ParkingManagement() {
         <div className="bg-white p-4 rounded-lg shadow flex justify-between items-center">
           <div>
             <p className="text-gray-500">Two Wheeler Slots</p>
-            <h2 className="text-xl font-bold"> {occupied2}/{twoWTotal}</h2>
+            <h2 className="text-xl font-bold"> {occupiedTwoWheeler}/{totalTwoWheelerSlots}</h2>
           </div>
           <Bike className="h-10 w-10 text-blue-600" />
         </div>
@@ -102,7 +134,7 @@ export default function ParkingManagement() {
         <div className="bg-white p-4 rounded-lg shadow flex justify-between items-center">
           <div>
             <p className="text-gray-500">Four Wheeler Slots</p>
-            <h2 className="text-xl font-bold">{occupied4}/{fourWTotal}</h2>
+            <h2 className="text-xl font-bold">{occupiedFourWheeler}/{totalFourWheelerSlots}</h2>
           </div>
           <Car className="h-10 w-10 text-emerald-600" />
         </div>
