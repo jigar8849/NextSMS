@@ -1,4 +1,4 @@
-- [ ] Add parking/vehicles API endpoint for residents in backend
-- [ ] Update resident controller to include getParking function
-- [ ] Create frontend API route for resident parking data
-- [ ] Update Vehicles component to fetch data from API instead of demo data
+- [ ] Add getEmployees function to residentController.js
+- [ ] Add /employees route to routes/resident.js
+- [ ] Create frontend/src/app/api/resident/employees/route.ts
+- [ ] Update frontend/src/components/resident/Staff.tsx to fetch data and display in table format like admin Employees.tsx

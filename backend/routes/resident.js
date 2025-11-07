@@ -20,4 +20,7 @@ router.post('/api/events', residentController.addEvent);
 // GET /resident/parking - Get parking data for the logged-in resident's society
 router.get('/parking', isAuthenticated, residentController.getParking);
 
+// GET /resident/employees - Get employees data for the logged-in resident's society
+router.get('/employees', isAuthenticated, residentController.getEmployees);
+
 module.exports = router;

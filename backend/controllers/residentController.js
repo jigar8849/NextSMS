@@ -2,6 +2,7 @@ const Complaints = require('../models/complain');
 const Event = require('../models/event');
 const NewMember = require('../models/newMember');
 const SocitySetUp = require('../models/socitySetUp');
+const Employee = require('../models/employee');
 
 // Add new complaint
 const addComplaint = async (req, res) => {
@@ -165,8 +166,45 @@ const getParking = async (req, res) => {
   }
 };
 
+// Get all employees for the logged-in resident's society
+const getEmployees = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Unauthorized. Please log in as resident.' });
+    }
+    const societyId = req.user.society; // Resident's society ID
+    console.log('Fetching employees for society:', societyId);
+
+    // Fetch employees for the society
+    const employees = await Employee.find({ society: societyId });
+    console.log('Found employees:', employees.length);
+
+    // Calculate stats
+    const totalEmployees = employees.length;
+    const totalActiveEmployees = employees.filter(emp => emp.status === 'Active').length;
+    const totalInactiveEmployees = totalEmployees - totalActiveEmployees;
+    const totalSalaryAmount = employees.reduce((sum, emp) => sum + emp.salary, 0);
+
+    const stats = {
+      totalEmployees,
+      totalActiveEmployees,
+      totalInactiveEmployees,
+      totalSalaryAmount
+    };
+
+    res.status(200).json({
+      employees,
+      stats
+    });
+  } catch (error) {
+    console.error('Error fetching employees:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 module.exports = {
   addComplaint,
   addEvent,
   getParking,
+  getEmployees,
 };
