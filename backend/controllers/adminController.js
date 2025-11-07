@@ -464,6 +464,47 @@ const getEmployees = async (req, res) => {
   }
 };
 
+// Get all residents for the logged-in admin's society
+const getResidents = async (req, res) => {
+  try {
+    const societyId = req.user._id; // Assuming req.user is the logged-in admin
+    console.log('Fetching residents for society:', societyId);
+
+    // Fetch residents for the society
+    const residents = await NewMember.find({ society: societyId });
+    console.log('Found residents:', residents.length);
+
+    res.status(200).json(residents);
+  } catch (error) {
+    console.error('Error fetching residents:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Delete a resident by ID
+const deleteResident = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: 'Invalid resident ID' });
+    }
+
+    // Check if resident belongs to the logged-in admin's society
+    const resident = await NewMember.findOne({ _id: id, society: req.user._id });
+    if (!resident) {
+      return res.status(404).json({ error: 'Resident not found or not authorized' });
+    }
+
+    // Delete the resident
+    await NewMember.findByIdAndDelete(id);
+
+    res.status(200).json({ message: 'Resident deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting resident:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 module.exports = {
   createSocietyAccount,
   getAllSocieties,
@@ -477,4 +518,6 @@ module.exports = {
   residentLogin,
   addNewEmployee,
   getEmployees,
+  getResidents,
+  deleteResident,
 };

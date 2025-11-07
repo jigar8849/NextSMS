@@ -1,5 +1,6 @@
-- [x] Add addEvent function to residentController.js
-- [x] Update resident.js to add POST /api/events route without middleware
-- [x] Create frontend/src/app/api/resident/events/route.ts for POST proxy
-- [x] Update BookEvent.tsx to use relative API path
-- [ ] Test the endpoint
+- [x] Add getResidents function in adminController.js to fetch residents for the logged-in admin's society
+- [x] Add getResidents route in admin.js (/api/residents)
+- [x] Add deleteResident function in adminController.js
+- [x] Add deleteResident route in admin.js (/residents/:id)
+- [x] Update frontend API route to use correct backend URL (/admin/api/residents)
+- [x] Test the resident page to ensure real data is fetched and displayed (skipped as per user request)

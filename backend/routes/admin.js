@@ -47,4 +47,10 @@ router.post('/addNewEmployee', adminController.addNewEmployee);
 // GET /admin/employees - Get all employees for the logged-in admin's society
 router.get('/employees', isAuthenticated, adminController.getEmployees);
 
+// GET /admin/api/residents - Get all residents for the logged-in admin's society
+router.get('/api/residents', isAuthenticated, adminController.getResidents);
+
+// DELETE /admin/residents/:id - Delete a resident by ID
+router.delete('/residents/:id', isAuthenticated, adminController.deleteResident);
+
 module.exports = router;

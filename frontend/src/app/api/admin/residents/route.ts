@@ -3,12 +3,14 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function GET(request: NextRequest) {
   try {
     // Fetch data from backend API
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3001';
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
     const response = await fetch(`${backendUrl}/admin/api/residents`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        'Cookie': request.headers.get('cookie') || '',
       },
+      credentials: 'include',
     });
 
     if (!response.ok) {
@@ -18,7 +20,7 @@ export async function GET(request: NextRequest) {
     const residentsData = await response.json();
 
     // Map the data to match the frontend interface
-    const residents = residentsData.map((resident: Record<string, any>) => ({
+    const residents = residentsData.map((resident: { _id: { toString(): string }; first_name: string; last_name: string; block: string; flat_number: number; createdAt: string; email: string; mobile_number: number; number_of_member: number; two_wheeler?: string; four_wheeler?: string; status: string }) => ({
       id: resident._id.toString(),
       name: `${resident.first_name} ${resident.last_name}`,
       flat: `${resident.block}-${resident.flat_number}`,
@@ -47,7 +49,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Call backend DELETE API
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3001';
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
     const response = await fetch(`${backendUrl}/admin/residents/${id}`, {
       method: 'DELETE',
       headers: {
