@@ -5,6 +5,10 @@ const passport = require('passport');
 
 // Middleware to check if admin is authenticated
 const isAuthenticated = (req, res, next) => {
+  console.log('isAuthenticated check:', {
+    isAuthenticated: req.isAuthenticated(),
+    user: req.user ? { id: req.user._id, modelName: req.user.constructor.modelName } : null
+  });
   if (req.isAuthenticated() && req.user.constructor.modelName === 'SocitySetUp') {
     return next();
   }
@@ -42,7 +46,7 @@ router.post('/createBill', adminController.createBill);
 router.post('/resident-login', adminController.residentLogin);
 
 // POST /admin/addNewEmployee - Add new employee
-router.post('/addNewEmployee', adminController.addNewEmployee);
+router.post('/addNewEmployee',  adminController.addNewEmployee);
 
 // GET /admin/employees - Get all employees for the logged-in admin's society
 router.get('/employees', isAuthenticated, adminController.getEmployees);

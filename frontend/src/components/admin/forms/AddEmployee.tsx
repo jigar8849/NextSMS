@@ -39,7 +39,7 @@ export default function AddEmployeeForm() {
     if (!name.trim()) return 'Please enter employee name.';
     if (!role) return 'Please select a role.';
     if (!contact.trim()) return 'Please enter contact number.';
-    if (!salary || toNumber(salary) === null || toNumber(salary)! <= 0) return 'Please enter a valid salary.';
+    if (!salary || toNumber(salary) === null || toNumber(salary) <= 0) return 'Please enter a valid salary.';
     if (!joinDate) return 'Please select join date.';
     if (!location.trim()) return 'Please enter location.';
     if (!status) return 'Please select status.';
@@ -69,7 +69,6 @@ export default function AddEmployeeForm() {
       join_date: joinDate, // map to schema field
       location: location.trim(),
       status,
-      society: '507f1f77bcf86cd799439011', // Temporary hardcoded society ID for testing
     };
 
     // Final safety check for numeric fields

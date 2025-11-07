@@ -44,17 +44,34 @@ export default function EmployeeManagement() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Removed fetch logic to show UI first
   useEffect(() => {
-    setLoading(false);
-    setError(null);
-    setEmployees([]);
-    setStats({
-      totalEmployees: 0,
-      totalActiveEmployees: 0,
-      totalInactiveEmployees: 0,
-      totalSalaryAmount: 0
-    });
+    const fetchEmployees = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+        const response = await fetch(`${backendUrl}/admin/employees`, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+        });
+        if (!response.ok) {
+          throw new Error('Failed to fetch employees');
+        }
+        const data: EmployeeResponse = await response.json();
+        setEmployees(data.employees);
+        setStats(data.stats);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEmployees();
   }, []);
 
   const total = employees.length;

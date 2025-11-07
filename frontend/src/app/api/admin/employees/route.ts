@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+    // Extract cookies from the incoming request
+    const cookieHeader = request.headers.get('cookie') || '';
+
     const response = await fetch(`${backendUrl}/admin/employees`, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
+        'Cookie': cookieHeader, // Forward the client's cookies
       },
-      credentials: 'include',
     });
 
     if (!response.ok) {

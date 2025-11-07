@@ -436,10 +436,15 @@ const addNewEmployee = async (req, res) => {
 // Get all employees for the logged-in admin's society
 const getEmployees = async (req, res) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Unauthorized. Please log in as admin.' });
+    }
     const societyId = req.user._id; // Assuming req.user is the logged-in admin
+    console.log('Fetching employees for society:', societyId);
 
     // Fetch employees for the society
     const employees = await Employee.find({ society: societyId });
+    console.log('Found employees:', employees.length);
 
     // Calculate stats
     const totalEmployees = employees.length;
@@ -467,6 +472,9 @@ const getEmployees = async (req, res) => {
 // Get all residents for the logged-in admin's society
 const getResidents = async (req, res) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Unauthorized. Please log in as admin.' });
+    }
     const societyId = req.user._id; // Assuming req.user is the logged-in admin
     console.log('Fetching residents for society:', societyId);
 
@@ -484,6 +492,9 @@ const getResidents = async (req, res) => {
 // Delete a resident by ID
 const deleteResident = async (req, res) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Unauthorized. Please log in as admin.' });
+    }
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ error: 'Invalid resident ID' });
@@ -508,6 +519,9 @@ const deleteResident = async (req, res) => {
 // Get parking data for the logged-in admin's society
 const getParking = async (req, res) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Unauthorized. Please log in as admin.' });
+    }
     const societyId = req.user._id; // Assuming req.user is the logged-in admin
 
     // Fetch society details for slot totals
