@@ -177,25 +177,25 @@ function StaffCard({ staff }: { staff: Employee }) {
       <p className="mt-1 text-center text-sm text-gray-600">{staff.role}</p>
 
       <div className="mt-6 space-y-3 text-sm text-gray-800">
-        <div className="inline-flex items-center gap-2">
+        <div className="flex items-center gap-2">
           <Phone className="h-4 w-4 text-gray-500" />
           <a href={`tel:${tel}`} className="font-medium hover:underline">
             {staff.contact}
           </a>
         </div>
-        <div className="inline-flex items-center gap-2">
+        <div className="flex items-center gap-2">
           <MapPin className="h-4 w-4 text-gray-500" />
           <span>{staff.location}</span>
         </div>
-        <div className="inline-flex items-center gap-2">
+        <div className="flex items-center gap-2">
           <DollarSign className="h-4 w-4 text-gray-500" />
           <span>{money(staff.salary)}</span>
         </div>
-        <div className="inline-flex items-center gap-2">
+        <div className="flex items-center gap-2">
           <Calendar className="h-4 w-4 text-gray-500" />
           <span>{new Date(staff.join_date).toLocaleDateString()}</span>
         </div>
-        <div className="inline-flex items-center gap-2">
+        <div className="flex items-center gap-2">
           <UserCheck className="h-4 w-4 text-gray-500" />
           <span
             className={`px-2 py-1 rounded-md text-xs font-medium ${
