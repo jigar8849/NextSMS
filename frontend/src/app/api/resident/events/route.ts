@@ -1,5 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export async function GET(request: NextRequest) {
+  try {
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
+    const response = await fetch(`${backendUrl}/resident/api/events`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        cookie: request.headers.get('cookie') || '',
+      },
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: 'Failed to fetch events' }));
+      return NextResponse.json(
+        { success: false, message: errorData.message },
+        { status: response.status }
+      );
+    }
+
+    const data = await response.json();
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error('Error fetching events:', error);
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();

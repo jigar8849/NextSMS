@@ -28,7 +28,7 @@ type EventItem = {
   date: string; // ISO date (yyyy-mm-dd)
   startTime: string; // "HH:MM"
   endTime: string; // "HH:MM"
-  venueId: string;
+  venue: string;
   attendees: number;
   organizer: string;
   status: EventStatus;
@@ -71,7 +71,7 @@ export default function EventsPage() {
       try {
         setIsLoading(true);
         setError(null);
-        const response = await fetch('http://localhost:3001/resident/api/events', {
+        const response = await fetch('/api/resident/events', {
           credentials: 'include', // Include cookies for session
         });
 
@@ -95,7 +95,7 @@ export default function EventsPage() {
 
   const removeEvent = async (id: string) => {
     try {
-      const response = await fetch(`http://localhost:3001/resident/api/events/${id}`, {
+      const response = await fetch(`/api/resident/events/${id}`, {
         method: 'DELETE',
         credentials: 'include',
       });
@@ -262,7 +262,7 @@ function EventRow({
             </div>
             <div className="inline-flex items-center gap-2">
               <MapPin className="h-4 w-4 text-gray-500" />
-              <span>{venueById(ev.venueId)}</span>
+              <span>{ev.venue}</span>
             </div>
             <div className="inline-flex items-center gap-2">
               <Users className="h-4 w-4 text-gray-500" />

@@ -85,7 +85,7 @@ const addEvent = async (req, res) => {
       startTime,
       endTime,
       attendees: Number(attendees),
-      createdBy: null // No auth for now
+      createdBy: req.user ? req.user._id : null // Set createdBy to logged-in resident or null
     });
 
     await newEvent.save();
@@ -202,9 +202,104 @@ const getEmployees = async (req, res) => {
   }
 };
 
+// Get events (no auth required for viewing)
+const getEvents = async (req, res) => {
+  try {
+    // Fetch all events, populate createdBy for organizer name
+    const events = await Event.find()
+      .populate('createdBy', 'first_name last_name')
+      .sort({ date: 1 }); // Sort by date ascending
+
+    // Map to frontend expected format
+    const formattedEvents = events.map(event => ({
+      id: event._id.toString(),
+      title: event.title,
+      date: event.date.toISOString().split('T')[0], // YYYY-MM-DD
+      startTime: event.startTime,
+      endTime: event.endTime,
+      venue: event.venue, // Direct venue string
+      attendees: event.attendees,
+      organizer: event.createdBy ? `${event.createdBy.first_name} ${event.createdBy.last_name}` : 'Unknown',
+      status: event.status
+    }));
+
+    res.status(200).json({
+      success: true,
+      events: formattedEvents
+    });
+  } catch (error) {
+    console.error('Error fetching events:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Update event
+const updateEvent = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Unauthorized. Please log in as resident.' });
+    }
+
+    const { id } = req.params;
+    const updateData = req.body;
+
+    // Find and update event, ensure user owns it
+    const event = await Event.findOneAndUpdate(
+      { _id: id, createdBy: req.user._id },
+      updateData,
+      { new: true, runValidators: true }
+    );
+
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found or unauthorized' });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Event updated successfully',
+      event
+    });
+  } catch (error) {
+    console.error('Error updating event:', error);
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ error: 'Validation failed', details: error.errors });
+    }
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Delete event
+const deleteEvent = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Unauthorized. Please log in as resident.' });
+    }
+
+    const { id } = req.params;
+
+    // Find and delete event, ensure user owns it
+    const event = await Event.findOneAndDelete({ _id: id, createdBy: req.user._id });
+
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found or unauthorized' });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Event deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting event:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 module.exports = {
   addComplaint,
   addEvent,
+  getEvents,
+  updateEvent,
+  deleteEvent,
   getParking,
   getEmployees,
 };

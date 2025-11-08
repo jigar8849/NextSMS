@@ -1,4 +1,9 @@
-- [ ] Add getEmployees function to residentController.js
-- [ ] Add /employees route to routes/resident.js
-- [ ] Create frontend/src/app/api/resident/employees/route.ts
+- [x] Add getEmployees function to residentController.js
+- [x] Add /employees route to routes/resident.js
+- [x] Create frontend/src/app/api/resident/employees/route.ts
 - [ ] Update frontend/src/components/resident/Staff.tsx to fetch data and display in table format like admin Employees.tsx
+- [x] Add getEvents, updateEvent, deleteEvent functions to residentController.js
+- [x] Add GET /api/events, PUT /api/events/:id, DELETE /api/events/:id routes to routes/resident.js
+- [x] Update frontend/src/app/api/resident/events/route.ts to include GET handler
+- [x] Create frontend/src/app/api/resident/events/[id]/route.ts with PUT and DELETE handlers
+- [x] Update frontend/src/components/resident/BookEvent.tsx to use new API endpoints and display venue as string

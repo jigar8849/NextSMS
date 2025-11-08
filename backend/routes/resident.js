@@ -17,6 +17,15 @@ router.post('/api/complaints', residentController.addComplaint);
 // POST /resident/api/events - Add new event
 router.post('/api/events', residentController.addEvent);
 
+// GET /resident/api/events - Get events (no auth required for viewing)
+router.get('/api/events', residentController.getEvents);
+
+// PUT /resident/api/events/:id - Update event
+router.put('/api/events/:id', isAuthenticated, residentController.updateEvent);
+
+// DELETE /resident/api/events/:id - Delete event
+router.delete('/api/events/:id', isAuthenticated, residentController.deleteEvent);
+
 // GET /resident/parking - Get parking data for the logged-in resident's society
 router.get('/parking', isAuthenticated, residentController.getParking);
 
