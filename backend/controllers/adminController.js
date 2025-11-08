@@ -603,7 +603,7 @@ const getComplaints = async (req, res) => {
       flat: complaint.resident ? `${complaint.resident.block}-${complaint.resident.flat_number}` : 'Unknown',
       category: complaint.category,
       priority: complaint.priority,
-      status: complaint.status,
+      status: complaint.status === 'InProgress' ? 'In-Progress' : (complaint.status === 'Complete' || complaint.status === 'Reject') ? 'Resolved' : complaint.status,
       date: complaint.created_at.toISOString().split('T')[0], // Format as YYYY-MM-DD
       attachments: complaint.Attachments ? 1 : 0, // Simple count, adjust if multiple attachments
     }));
