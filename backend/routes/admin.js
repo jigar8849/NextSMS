@@ -60,4 +60,7 @@ router.delete('/residents/:id', isAuthenticated, adminController.deleteResident)
 // GET /admin/parking - Get parking data for the logged-in admin's society
 router.get('/parking', isAuthenticated, adminController.getParking);
 
+// GET /admin/complaints - Get all complaints for the logged-in admin's society
+router.get('/complaints', isAuthenticated, adminController.getComplaints);
+
 module.exports = router;

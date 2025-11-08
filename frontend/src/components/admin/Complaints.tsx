@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   MessageSquareText,
   Clock3,
@@ -16,7 +16,7 @@ type Status = "Pending" | "In-Progress" | "Resolved";
 type Priority = "Low" | "Medium" | "High";
 
 type Complaint = {
-  id: number;
+  id: string;
   title: string;
   description: string;
   resident: string;
@@ -28,50 +28,50 @@ type Complaint = {
   attachments?: number;
 };
 
+type Stats = {
+  total: number;
+  pending: number;
+  inProgress: number;
+  resolved: number;
+};
+
 export default function ComplaintsManagement() {
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState<"All" | Status>("All");
   const [priorityFilter, setPriorityFilter] = useState<"All" | Priority>("All");
+  const [complaints, setComplaints] = useState<Complaint[]>([]);
+  const [stats, setStats] = useState<Stats>({ total: 0, pending: 0, inProgress: 0, resolved: 0 });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // --- mock data (swap with your API) ---
-  const complaints: Complaint[] = [
-    {
-      id: 1,
-      title: "testing",
-      description:
-        "at night society member talk loudly in gate so it can be disturbing",
-      resident: "Jigar Prajapati",
-      flat: "Block D-11",
-      category: "Noise",
-      priority: "High",
-      status: "Pending",
-      date: "2025-07-28",
-      attachments: 1,
-    },
-    {
-      id: 2,
-      title: "Street light not working",
-      description: "Light near C-Block parking is flickering.",
-      resident: "Aarti Shah",
-      flat: "Block C-204",
-      category: "Maintenance",
-      priority: "Medium",
-      status: "In-Progress",
-      date: "2025-07-27",
-    },
-    {
-      id: 3,
-      title: "Water leakage",
-      description: "Leak from overhead tank.",
-      resident: "Rahul Mehta",
-      flat: "Block B-305",
-      category: "Plumbing",
-      priority: "Low",
-      status: "Resolved",
-      date: "2025-07-20",
-      attachments: 2,
-    },
-  ];
+  // Fetch complaints from API
+  useEffect(() => {
+    const fetchComplaints = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('http://localhost:5000/admin/complaints', {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+        });
+        if (!response.ok) {
+          throw new Error('Failed to fetch complaints');
+        }
+        const data = await response.json();
+        setComplaints(data.complaints || []);
+        setStats(data.stats || { total: 0, pending: 0, inProgress: 0, resolved: 0 });
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchComplaints();
+  }, []);
 
   // --- derived stats ---
   const total = complaints.length;
@@ -111,6 +111,17 @@ export default function ComplaintsManagement() {
       Medium: "bg-indigo-100 text-indigo-700",
       High: "bg-rose-100 text-rose-700",
     }[p]);
+
+  if (error) {
+    return (
+      <div className="p-6 mt-15">
+        <h1 className="text-2xl font-bold">Complaints Management</h1>
+        <div className="mt-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+          Error loading complaints: {error}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 mt-15">
@@ -168,7 +179,7 @@ export default function ComplaintsManagement() {
           <select
             className="appearance-none border bg-white px-3 py-2 pr-9 rounded-md w-full"
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as any)}
+            onChange={(e) => setStatusFilter(e.target.value as "All" | Status)}
           >
             <option>All</option>
             <option>Pending</option>
@@ -182,7 +193,7 @@ export default function ComplaintsManagement() {
           <select
             className="appearance-none border bg-white px-3 py-2 pr-9 rounded-md w-full"
             value={priorityFilter}
-            onChange={(e) => setPriorityFilter(e.target.value as any)}
+            onChange={(e) => setPriorityFilter(e.target.value as "All" | Priority)}
           >
             <option>All</option>
             <option>Low</option>

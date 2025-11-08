@@ -2,6 +2,7 @@ const SocitySetUp = require('../models/socitySetUp');
 const NewMember = require('../models/newMember');
 const AdminBillTemplate = require('../models/adminBill');
 const Employee = require('../models/employee');
+const Complaints = require('../models/complain');
 const mongoose = require('mongoose');
 
 // Create society account (admin registration)
@@ -577,6 +578,59 @@ const getParking = async (req, res) => {
   }
 };
 
+// Get all complaints for the logged-in admin's society
+const getComplaints = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Unauthorized. Please log in as admin.' });
+    }
+    const societyId = req.user._id; // Assuming req.user is the logged-in admin
+    console.log('Fetching complaints for society:', societyId);
+
+    // Fetch complaints for the society, populate resident details
+    const complaints = await Complaints.find({ resident: { $in: await NewMember.find({ society: societyId }).select('_id') } })
+      .populate('resident', 'first_name last_name block flat_number mobile_number')
+      .sort({ created_at: -1 }); // Sort by creation date descending
+
+    console.log('Found complaints:', complaints.length);
+
+    // Map to the format expected by frontend
+    const formattedComplaints = complaints.map(complaint => ({
+      id: complaint._id.toString(),
+      title: complaint.title,
+      description: complaint.description,
+      resident: complaint.resident ? `${complaint.resident.first_name} ${complaint.resident.last_name}` : 'Unknown',
+      flat: complaint.resident ? `${complaint.resident.block}-${complaint.resident.flat_number}` : 'Unknown',
+      category: complaint.category,
+      priority: complaint.priority,
+      status: complaint.status,
+      date: complaint.created_at.toISOString().split('T')[0], // Format as YYYY-MM-DD
+      attachments: complaint.Attachments ? 1 : 0, // Simple count, adjust if multiple attachments
+    }));
+
+    // Calculate stats
+    const total = formattedComplaints.length;
+    const pending = formattedComplaints.filter(c => c.status === 'Pending').length;
+    const inProgress = formattedComplaints.filter(c => c.status === 'InProgress').length;
+    const resolved = formattedComplaints.filter(c => c.status === 'Complete' || c.status === 'Reject').length;
+
+    const stats = {
+      total,
+      pending,
+      inProgress,
+      resolved
+    };
+
+    res.status(200).json({
+      complaints: formattedComplaints,
+      stats
+    });
+  } catch (error) {
+    console.error('Error fetching complaints:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 module.exports = {
   createSocietyAccount,
   getAllSocieties,
@@ -593,4 +647,5 @@ module.exports = {
   getResidents,
   deleteResident,
   getParking,
+  getComplaints,
 };
