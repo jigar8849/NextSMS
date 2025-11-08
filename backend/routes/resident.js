@@ -12,7 +12,10 @@ const isAuthenticated = (req, res, next) => {
 };
 
 // POST /resident/api/complaints - Add new complaint
-router.post('/api/complaints', residentController.addComplaint);
+router.post('/api/complaints', isAuthenticated, residentController.addComplaint);
+
+// GET /resident/api/complaints - Get complaints for logged-in resident
+router.get('/api/complaints', isAuthenticated, residentController.getComplaints);
 
 // POST /resident/api/events - Add new event
 router.post('/api/events', residentController.addEvent);

@@ -75,7 +75,8 @@ export default function ComplaintsPage() {
       try {
         setLoading(true);
         setError(null);
-        const response = await fetch('http://localhost:3001/resident/api/complaints', {
+        const response = await fetch('/api/resident/complaints', {
+          method: 'GET',
           credentials: 'include', // Include cookies for session
         });
 
@@ -107,7 +108,7 @@ export default function ComplaintsPage() {
 
   const removeComplaint = async (id: string) => {
     try {
-      const response = await fetch(`http://localhost:3001/resident/api/complaints/${id}`, {
+      const response = await fetch(`/api/resident/complaints/${id}`, {
         method: 'DELETE',
         credentials: 'include',
       });

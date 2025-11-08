@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import { Send } from "lucide-react";
 
 export default function NewComplaintPage() {
+  const router = useRouter();
   const [form, setForm] = useState({
     title: "",
     category: "",
@@ -46,6 +48,10 @@ export default function NewComplaintPage() {
           date: '',
           file: null,
         });
+        // Redirect to complaints page after 2 seconds
+        setTimeout(() => {
+          router.push('/resident/complaints');
+        }, 2000);
       } else {
         setMessage({ type: 'error', text: `Error: ${data.message}` });
       }

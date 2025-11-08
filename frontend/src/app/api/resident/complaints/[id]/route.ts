@@ -2,8 +2,8 @@
 
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3001';
-    const response = await fetch(`${backendUrl}/resident/complaints/${params.id}`, {
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
+    const response = await fetch(`${backendUrl}/resident/api/complaints/${params.id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',

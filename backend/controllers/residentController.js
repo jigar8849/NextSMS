@@ -27,7 +27,7 @@ const addComplaint = async (req, res) => {
       category,
       priority,
       description: description.trim(),
-      resident: req.body.resident || null, // Use provided resident ID or null for now
+      resident: req.user ? req.user._id : null, // Use logged-in resident ID
       Attachments: Attachments || {} // Optional attachments
     });
 
@@ -47,6 +47,57 @@ const addComplaint = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+// Get complaints for the logged-in resident
+const getComplaints = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Unauthorized. Please log in as resident.' });
+    }
+
+    // Fetch complaints for the logged-in resident
+    const complaints = await Complaints.find({ resident: req.user._id }).sort({ created_at: -1 });
+
+    // Map to frontend expected format
+    const mappedComplaints = complaints.map(complaint => ({
+      id: complaint._id.toString(),
+      title: complaint.title,
+      description: complaint.description,
+      filedOn: complaint.created_at.toISOString(),
+      category: complaint.category,
+      status: mapStatus(complaint.status),
+      priority: complaint.priority,
+      attachments: complaint.Attachments && complaint.Attachments.url ? 1 : 0 // Assuming single attachment
+    }));
+
+    res.status(200).json({
+      success: true,
+      complaints: mappedComplaints
+    });
+
+  } catch (error) {
+    console.error('Error fetching complaints:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Helper function to map backend status to frontend status
+function mapStatus(backendStatus) {
+  switch (backendStatus) {
+    case 'Pending':
+      return 'Pending';
+    case 'InProgress':
+      return 'In Progress';
+    case 'Complete':
+      return 'Resolved';
+    case 'Reject':
+      return 'Rejected';
+    case 'On-hold':
+      return 'In Progress'; // Assuming On-hold as In Progress
+    default:
+      return 'Pending';
+  }
+}
 
 // Add new event
 const addEvent = async (req, res) => {
@@ -296,6 +347,7 @@ const deleteEvent = async (req, res) => {
 
 module.exports = {
   addComplaint,
+  getComplaints,
   addEvent,
   getEvents,
   updateEvent,
