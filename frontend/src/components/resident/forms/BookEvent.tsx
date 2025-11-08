@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import { CalendarDays } from "lucide-react";
 
 const VENUES = [
@@ -11,6 +12,7 @@ const VENUES = [
 ];
 
 export default function NewEventPage() {
+  const router = useRouter();
   const [form, setForm] = useState({
     title: "",
     venueId: "",
@@ -50,6 +52,10 @@ export default function NewEventPage() {
           startTime: "",
           endTime: "",
         });
+        // Redirect to events page after successful booking
+        setTimeout(() => {
+          router.push('/resident/eventss');
+        }, 1500); // Wait 1.5 seconds to show success message
       } else {
         setMessage({ type: 'error', text: data.message });
       }
