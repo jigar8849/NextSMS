@@ -631,6 +631,54 @@ const getComplaints = async (req, res) => {
   }
 };
 
+// Update complaint status
+const updateComplaintStatus = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Unauthorized. Please log in as admin.' });
+    }
+
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: 'Invalid complaint ID' });
+    }
+
+    // Validate status
+    const validStatuses = ['Pending', 'InProgress', 'Complete', 'On-hold', 'Reject'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ error: 'Invalid status value' });
+    }
+
+    // Find the complaint and check if it belongs to the admin's society
+    const complaint = await Complaints.findById(id).populate('resident', 'society');
+    if (!complaint) {
+      return res.status(404).json({ error: 'Complaint not found' });
+    }
+
+    // Check if the complaint's resident belongs to the admin's society
+    if (!complaint.resident || complaint.resident.society.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: 'Unauthorized to update this complaint' });
+    }
+
+    // Update the status
+    complaint.status = status;
+    await complaint.save();
+
+    res.status(200).json({
+      message: 'Complaint status updated successfully',
+      complaint: {
+        id: complaint._id,
+        status: complaint.status
+      }
+    });
+  } catch (error) {
+    console.error('Error updating complaint status:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 module.exports = {
   createSocietyAccount,
   getAllSocieties,
@@ -648,4 +696,5 @@ module.exports = {
   deleteResident,
   getParking,
   getComplaints,
+  updateComplaintStatus,
 };

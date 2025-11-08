@@ -63,4 +63,7 @@ router.get('/parking', isAuthenticated, adminController.getParking);
 // GET /admin/complaints - Get all complaints for the logged-in admin's society
 router.get('/complaints', isAuthenticated, adminController.getComplaints);
 
+// PUT /admin/complaints/:id/status - Update complaint status
+router.put('/complaints/:id/status', isAuthenticated, adminController.updateComplaintStatus);
+
 module.exports = router;

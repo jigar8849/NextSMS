@@ -266,7 +266,7 @@ export default function ComplaintsManagement() {
 
                 <td className="p-3">
                   <Link
-                    href="/admin/forms/manageComplain"
+                    href={`/admin/forms/manageComplain?id=${c.id}`}
                     className="bg-blue-600 text-white px-3 py-1.5 rounded-md text-sm hover:bg-blue-700"
                   >
                     Manage
