@@ -1,6 +1,7 @@
 const SocitySetUp = require('../models/socitySetUp');
 const NewMember = require('../models/newMember');
 const AdminBillTemplate = require('../models/adminBill');
+const ResidentBill = require('../models/residentBill');
 const Employee = require('../models/employee');
 const Complaints = require('../models/complain');
 const mongoose = require('mongoose');
@@ -319,6 +320,12 @@ const createBill = async (req, res) => {
       return res.status(400).json({ error: 'Invalid penalty' });
     }
 
+    // Get the logged-in admin's society ID
+    if (!req.user) {
+      return res.status(401).json({ error: 'Unauthorized. Please log in as admin.' });
+    }
+    const societyId = req.user._id;
+
     // Create new bill template
     const newBill = new AdminBillTemplate({
       title: title.trim(),
@@ -326,15 +333,34 @@ const createBill = async (req, res) => {
       amount: parsedAmount,
       penalty: parsedPenalty,
       dueDate: new Date(dueDate),
-      createdBy: req.user ? req.user._id : null // Admin's society ID, optional for now
+      createdBy: societyId
     });
 
     await newBill.save();
 
+    // Fetch all residents for this society
+    const residents = await NewMember.find({ society: societyId });
+
+    // Create ResidentBill documents for each resident
+    const residentBills = residents.map(resident => ({
+      resident: resident._id,
+      billTemplate: newBill._id,
+      amount: parsedAmount,
+      dueDate: new Date(dueDate),
+      penaltyPerDay: parsedPenalty,
+      isPaid: false
+    }));
+
+    // Insert all resident bills at once
+    if (residentBills.length > 0) {
+      await ResidentBill.insertMany(residentBills);
+    }
+
     res.status(201).json({
       ok: true,
-      message: 'Bill created successfully',
-      bill: newBill
+      message: `Bill created successfully for ${residents.length} residents`,
+      bill: newBill,
+      residentsCount: residents.length
     });
 
   } catch (error) {
@@ -679,6 +705,148 @@ const updateComplaintStatus = async (req, res) => {
   }
 };
 
+// Get all payments for the logged-in admin's society
+const getPayments = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Unauthorized. Please log in as admin.' });
+    }
+    const societyId = req.user._id; // Assuming req.user is the logged-in admin
+    console.log('Fetching payments for society:', societyId);
+
+    // Fetch all bill templates for the society
+    const billTemplates = await AdminBillTemplate.find({ createdBy: societyId })
+      .sort({ createdAt: -1 });
+
+    // Fetch all residents for the society
+    const residents = await NewMember.find({ society: societyId });
+
+    console.log('Found bill templates:', billTemplates.length);
+    console.log('Found residents:', residents.length);
+
+    const payments = [];
+
+    // For each bill template and each resident, create a payment entry
+    for (const billTemplate of billTemplates) {
+      for (const resident of residents) {
+        // Check if a ResidentBill exists for this resident and bill template
+        const existingBill = await ResidentBill.findOne({
+          resident: resident._id,
+          billTemplate: billTemplate._id
+        });
+
+        // Use existing bill data if available, otherwise use template data
+        const billData = existingBill || {
+          amount: billTemplate.amount,
+          dueDate: billTemplate.dueDate,
+          isPaid: false,
+          paidAt: null
+        };
+
+        // Calculate overdue status
+        const today = new Date();
+        const dueDate = new Date(billData.dueDate);
+        const isOverdue = !billData.isPaid && today > dueDate;
+        const daysOverdue = isOverdue ? Math.floor((today - dueDate) / (1000 * 60 * 60 * 24)) : 0;
+
+        // Calculate current amount (base + penalty if overdue)
+        const baseAmount = billData.amount;
+        const penaltyAmount = isOverdue ? (billTemplate.penalty || 0) * daysOverdue : 0;
+        const currentAmount = baseAmount + penaltyAmount;
+
+        // Determine payment status
+        let paymentStatus = 'Pending';
+        if (billData.isPaid) {
+          paymentStatus = 'Paid';
+        } else if (isOverdue) {
+          paymentStatus = 'Overdue';
+        }
+
+        // Format dates
+        const formattedDueDate = dueDate.toLocaleDateString('en-IN', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric'
+        });
+
+        const paidAtFormatted = billData.paidAt ? billData.paidAt.toLocaleDateString('en-IN', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric'
+        }) : null;
+
+        payments.push({
+          id: existingBill ? existingBill._id.toString() : `${billTemplate._id}-${resident._id}`,
+          residentName: `${resident.first_name} ${resident.last_name}`,
+          flat: `${resident.block}-${resident.flat_number}`,
+          billTitle: billTemplate.title,
+          billType: billTemplate.type,
+          baseAmount: baseAmount,
+          penaltyAmount: penaltyAmount,
+          currentAmount: currentAmount,
+          dueDate: formattedDueDate,
+          isOverdue: isOverdue,
+          daysOverdue: daysOverdue,
+          isPaid: billData.isPaid,
+          paidAt: paidAtFormatted,
+          paymentStatus: paymentStatus,
+          residentId: resident._id.toString(),
+          billTemplateId: billTemplate._id.toString()
+        });
+      }
+    }
+
+    console.log('Total payments generated:', payments.length);
+    res.status(200).json(payments);
+  } catch (error) {
+    console.error('Error fetching payments:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Mark payment as paid
+const markPaymentAsPaid = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Unauthorized. Please log in as admin.' });
+    }
+
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: 'Invalid payment ID' });
+    }
+
+    // Find the resident bill and check if it belongs to the admin's society
+    const residentBill = await ResidentBill.findById(id).populate('resident', 'society');
+    if (!residentBill) {
+      return res.status(404).json({ error: 'Payment not found' });
+    }
+
+    // Check if the resident belongs to the admin's society
+    if (!residentBill.resident || residentBill.resident.society.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: 'Unauthorized to update this payment' });
+    }
+
+    // Mark as paid
+    residentBill.isPaid = true;
+    residentBill.paidAt = new Date();
+    residentBill.totalPaid = residentBill.amount; // Assuming totalPaid is the amount paid
+    await residentBill.save();
+
+    res.status(200).json({
+      message: 'Payment marked as paid successfully',
+      payment: {
+        id: residentBill._id,
+        isPaid: residentBill.isPaid,
+        paidAt: residentBill.paidAt
+      }
+    });
+  } catch (error) {
+    console.error('Error updating payment:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 module.exports = {
   createSocietyAccount,
   getAllSocieties,
@@ -697,4 +865,6 @@ module.exports = {
   getParking,
   getComplaints,
   updateComplaintStatus,
+  getPayments,
+  markPaymentAsPaid,
 };

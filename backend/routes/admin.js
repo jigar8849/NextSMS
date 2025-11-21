@@ -66,4 +66,10 @@ router.get('/complaints', isAuthenticated, adminController.getComplaints);
 // PUT /admin/complaints/:id/status - Update complaint status
 router.put('/complaints/:id/status', isAuthenticated, adminController.updateComplaintStatus);
 
+// GET /admin/payments - Get all payments for the logged-in admin's society
+router.get('/payments', isAuthenticated, adminController.getPayments);
+
+// GET /admin/payments/mark/:id - Mark payment as paid
+router.get('/payments/mark/:id', isAuthenticated, adminController.markPaymentAsPaid);
+
 module.exports = router;

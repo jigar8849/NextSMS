@@ -3,12 +3,14 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function GET(request: NextRequest) {
   try {
     // Fetch data from backend API
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3001';
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
     const response = await fetch(`${backendUrl}/admin/payments`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        'Cookie': request.headers.get('cookie') || '',
       },
+      credentials: 'include', // Include cookies for session authentication
     });
 
     if (!response.ok) {
@@ -17,27 +19,7 @@ export async function GET(request: NextRequest) {
 
     const paymentsData = await response.json();
 
-    // Map the data to match the frontend interface
-    const payments = paymentsData.map((bill: Record<string, any>) => ({
-      id: bill._id.toString(),
-      residentName: `${bill.resident.first_name} ${bill.resident.last_name}`,
-      flat: `${bill.resident.block}-${bill.resident.flat_number}`,
-      billTitle: bill.billTemplate.title,
-      billType: bill.billTemplate.type,
-      baseAmount: bill.amount,
-      penaltyAmount: bill.penaltyAmount || 0,
-      currentAmount: bill.currentAmount || bill.amount,
-      dueDate: bill.formattedDueDate,
-      isOverdue: bill.isOverdue,
-      daysOverdue: bill.daysOverdue || 0,
-      isPaid: bill.isPaid,
-      paidAt: bill.paidAtFormatted,
-      paymentStatus: bill.paymentStatus,
-      residentId: bill.resident._id.toString(),
-      billTemplateId: bill.billTemplate._id.toString()
-    }));
-
-    return NextResponse.json(payments);
+    return NextResponse.json(paymentsData);
   } catch (error) {
     console.error('Error fetching payments:', error);
     return NextResponse.json({ error: 'Failed to fetch payments' }, { status: 500 });
@@ -55,7 +37,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Call backend API to create bill
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3001';
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
     const response = await fetch(`${backendUrl}/admin/createBill`, {
       method: 'POST',
       headers: {
@@ -94,7 +76,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Call backend API to mark as paid
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3001';
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
     const response = await fetch(`${backendUrl}/admin/payments/mark/${id}`, {
       method: 'GET', // Backend uses GET for marking paid
       headers: {
