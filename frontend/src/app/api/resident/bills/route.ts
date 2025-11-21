@@ -4,7 +4,7 @@ export async function GET(request: NextRequest) {
   try {
     // Fetch data from backend API
     const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
-    const response = await fetch(`${backendUrl}/resident/api/bills`, {
+    const response = await fetch(`${backendUrl}/resident/bills`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

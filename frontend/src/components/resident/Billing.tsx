@@ -40,7 +40,7 @@ export default function Billing() {
         if (data.success) {
           setBills(data.bills);
           // Initialize selected with unpaid bills
-          const unpaidSelected = data.bills.filter(isUnpaid).reduce((acc, b) => ({ ...acc, [b.id]: true }), {});
+          const unpaidSelected = data.bills.filter(isUnpaid).reduce((acc: Record<string, boolean>, b: Bill) => ({ ...acc, [b.id]: true }), {});
           setSelected(unpaidSelected);
         } else {
           throw new Error(data.error || 'Failed to fetch bills');
@@ -53,6 +53,14 @@ export default function Billing() {
     };
 
     fetchBills();
+
+    // Load Razorpay script
+    if (!(window as any).Razorpay) {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      document.head.appendChild(script);
+    }
   }, []);
 
   const stats = useMemo(() => {
@@ -80,11 +88,56 @@ export default function Billing() {
 
   const toggleOne = (id: string) => setSelected(s => ({ ...s, [id]: !s[id] }));
 
-  const paySelected = () => {
+  const paySelected = async () => {
     if (stats.selectedTotal === 0) return;
-    setBills(prev => prev.map(b => (selected[b.id] ? { ...b, status: "Paid" } : b)));
-    setSelected({});
-    alert("Payment successful (demo) ✅");
+
+    const selectedBillIds = Object.keys(selected).filter(id => selected[id]);
+
+    try {
+      const response = await fetch('/api/resident/payment/order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ billIds: selectedBillIds }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create payment order');
+      }
+
+      // Open Razorpay checkout
+      const options = {
+        key: data.key,
+        amount: data.amount,
+        currency: data.currency,
+        name: 'Society Management',
+        description: 'Bill Payment',
+        order_id: data.orderId,
+        handler: function (response: any) {
+          // Payment successful
+          setBills(prev => prev.map(b => (selected[b.id] ? { ...b, status: "Paid" } : b)));
+          setSelected({});
+          alert("Payment successful ✅");
+        },
+        prefill: {
+          name: 'Resident',
+          email: 'resident@example.com',
+          contact: '9999999999',
+        },
+        theme: {
+          color: '#3399cc',
+        },
+      };
+
+      const rzp = new (window as any).Razorpay(options) as any;
+      rzp.open();
+    } catch (error) {
+      console.error('Payment error:', error);
+      alert("Payment failed. Please try again.");
+    }
   };
 
   if (loading) {

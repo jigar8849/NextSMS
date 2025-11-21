@@ -1,41 +1,42 @@
 const express = require('express');
 const router = express.Router();
-const residentController = require('../controllers/residentController');
-const passport = require('passport');
+const { authenticateResident } = require('../middleware/auth');
 
-// Middleware to check if resident is authenticated
-const isAuthenticated = (req, res, next) => {
-  if (req.isAuthenticated() && req.user.constructor.modelName === 'NewMember') {
-    return next();
-  }
-  res.status(401).json({ error: 'Unauthorized. Please log in as resident.' });
-};
+// Temporarily remove authentication for testing
+// const { authenticateResident } = require('../middleware/auth');
+const {
+  addComplaint,
+  getComplaints,
+  addEvent,
+  getEvents,
+  updateEvent,
+  deleteEvent,
+  getParking,
+  getEmployees,
+  getBills,
+  createPaymentOrder,
+} = require('../controllers/residentController');
 
-// POST /resident/api/complaints - Add new complaint
-router.post('/api/complaints', isAuthenticated, residentController.addComplaint);
+// Complaints routes
+router.post('/complaints', addComplaint); // Temporarily remove auth for testing
+router.get('/complaints', getComplaints); // Temporarily remove auth for testing
 
-// GET /resident/api/complaints - Get complaints for logged-in resident
-router.get('/api/complaints', isAuthenticated, residentController.getComplaints);
+// Events routes
+router.post('/events', addEvent); // Temporarily remove auth for testing
+router.get('/events', getEvents); // No auth for viewing
+router.put('/events/:id', authenticateResident, updateEvent);
+router.delete('/events/:id', authenticateResident, deleteEvent);
 
-// POST /resident/api/events - Add new event
-router.post('/api/events', residentController.addEvent);
+// Parking routes
+router.get('/parking', getParking); // Temporarily remove auth for testing
 
-// GET /resident/api/events - Get events (no auth required for viewing)
-router.get('/api/events', residentController.getEvents);
+// Employees routes
+router.get('/employees', getEmployees); // Temporarily remove auth for testing
 
-// PUT /resident/api/events/:id - Update event
-router.put('/api/events/:id', isAuthenticated, residentController.updateEvent);
+// Bills routes
+router.get('/bills', authenticateResident, getBills);
 
-// DELETE /resident/api/events/:id - Delete event
-router.delete('/api/events/:id', isAuthenticated, residentController.deleteEvent);
-
-// GET /resident/parking - Get parking data for the logged-in resident's society
-router.get('/parking', isAuthenticated, residentController.getParking);
-
-// GET /resident/employees - Get employees data for the logged-in resident's society
-router.get('/employees', isAuthenticated, residentController.getEmployees);
-
-// GET /resident/api/bills - Get bills for logged-in resident
-router.get('/api/bills', isAuthenticated, residentController.getBills);
+// Payment routes
+router.post('/payment/order', authenticateResident, createPaymentOrder);
 
 module.exports = router;

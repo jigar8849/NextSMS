@@ -4,6 +4,7 @@ const NewMember = require('../models/newMember');
 const SocitySetUp = require('../models/socitySetUp');
 const Employee = require('../models/employee');
 const ResidentBill = require('../models/residentBill');
+const Razorpay = require("razorpay");
 
 // Add new complaint
 const addComplaint = async (req, res) => {
@@ -392,6 +393,63 @@ const getBills = async (req, res) => {
   }
 };
 
+// Create Razorpay order for payment
+const createPaymentOrder = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Unauthorized. Please log in as resident.' });
+    }
+
+    const { billIds } = req.body; // Array of bill IDs to pay
+
+    if (!billIds || !Array.isArray(billIds) || billIds.length === 0) {
+      return res.status(400).json({ error: 'Bill IDs are required' });
+    }
+
+    // Fetch bills for the logged-in resident
+    const bills = await ResidentBill.find({
+      _id: { $in: billIds },
+      resident: req.user._id,
+      isPaid: false
+    }).populate('billTemplate');
+
+    if (bills.length === 0) {
+      return res.status(404).json({ error: 'No unpaid bills found' });
+    }
+
+    // Calculate total amount
+    const totalAmount = bills.reduce((sum, bill) => sum + bill.amount, 0);
+
+    // Initialize Razorpay
+    const razorpay = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET,
+    });
+
+    // Create order
+    const options = {
+      amount: totalAmount * 100, // Amount in paisa
+      currency: 'INR',
+      receipt: `receipt_${Date.now()}`,
+      payment_capture: 1, // Auto capture
+    };
+
+    const order = await razorpay.orders.create(options);
+
+    res.status(200).json({
+      success: true,
+      orderId: order.id,
+      amount: order.amount,
+      currency: order.currency,
+      key: process.env.RAZORPAY_KEY_ID,
+    });
+
+  } catch (error) {
+    console.error('Error creating payment order:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 module.exports = {
   addComplaint,
   getComplaints,
@@ -402,4 +460,5 @@ module.exports = {
   getParking,
   getEmployees,
   getBills,
+  createPaymentOrder,
 };
