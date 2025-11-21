@@ -1,8 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  turbopack: {
-    root: './',
+  // Removed turbopack for better performance
+  experimental: {
+    optimizeCss: true,
+  },
+  images: {
+    unoptimized: true, // Since no images, but for future
   },
 };
 

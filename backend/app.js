@@ -1,6 +1,4 @@
 require('dotenv').config();
-// Override MONGO_URI to use lowercase to avoid case sensitivity issues
-process.env.MONGO_URI = 'mongodb://localhost:27017/nextsms';
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -37,8 +35,8 @@ app.use(cors({
 }));
 
 // Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 // Session configuration
 app.use(session({

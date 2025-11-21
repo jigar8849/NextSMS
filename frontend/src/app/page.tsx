@@ -13,8 +13,8 @@ import Link from "next/link";
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      {/* Enhanced Navbar */}
-      <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md shadow-lg border-b border-gray-100">
+      {/* Navbar */}
+      <nav className="sticky top-0 z-50 bg-white shadow-lg border-b border-gray-100">
         <div className="container mx-auto px-4 md:px-8 lg:px-12">
           <div className="flex justify-between items-center h-20">
             {/* Enhanced Logo */}
@@ -31,17 +31,17 @@ export default function Home() {
               </Link>
             </div>
 
-            {/* Enhanced Login Buttons */}
+            {/* Login Buttons */}
             <div className="flex gap-3 md:gap-4">
               <a
                 href="/adminLogin"
-                className="border-2 border-blue-600 text-blue-600 text-sm md:text-base px-4 md:px-6 py-2 md:py-3 rounded-xl font-medium hover:bg-blue-600 hover:text-white transition-all duration-300 hover:shadow-lg"
+                className="border-2 border-blue-600 text-blue-600 text-sm md:text-base px-4 md:px-6 py-2 md:py-3 rounded-xl font-medium hover:bg-blue-600 hover:text-white"
               >
                 Admin Login
               </a>
               <a
                 href="/residentLogin"
-                className="bg-blue-600 text-white text-sm md:text-base px-4 md:px-6 py-2 md:py-3 rounded-xl font-medium hover:bg-blue-700 transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1"
+                className="bg-blue-600 text-white text-sm md:text-base px-4 md:px-6 py-2 md:py-3 rounded-xl font-medium hover:bg-blue-700"
               >
                 Resident Login
               </a>
@@ -131,8 +131,8 @@ export default function Home() {
         </div>
       </main>
 
-      {/* Enhanced Features Section */}
-      <section className="py-20 bg-white/50 backdrop-blur-sm">
+      {/* Features Section */}
+      <section className="py-20 bg-white">
         <div className="container mx-auto px-4 md:px-8 lg:px-12">
           {/* Section Header */}
           <div className="text-center mb-16">
@@ -145,16 +145,13 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Enhanced Feature Grid */}
+          {/* Feature Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {/* Feature 1 - Enhanced */}
-            <div className="group bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100">
-              <div className="relative mb-6">
-                <div className="flex items-center justify-center h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 text-white mx-auto group-hover:scale-110 transition-transform">
+            {/* Feature 1 */}
+            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
+              <div className="mb-6">
+                <div className="flex items-center justify-center h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 text-white mx-auto">
                   <FaUsers className="text-xl" />
-                </div>
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-400 rounded-full flex items-center justify-center">
-                  <FaCheck className="text-white text-xs" />
                 </div>
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3 text-center">
@@ -164,21 +161,13 @@ export default function Home() {
                 Comprehensive resident profiles with family details, vehicle
                 information, and automated onboarding processes
               </p>
-              <div className="mt-4 text-center">
-                <span className="text-blue-600 text-sm font-medium">
-                  Learn More →
-                </span>
-              </div>
             </div>
 
-            {/* Feature 2 - Enhanced */}
-            <div className="group bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100">
-              <div className="relative mb-6">
-                <div className="flex items-center justify-center h-16 w-16 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 text-white mx-auto group-hover:scale-110 transition-transform">
+            {/* Feature 2 */}
+            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
+              <div className="mb-6">
+                <div className="flex items-center justify-center h-16 w-16 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 text-white mx-auto">
                   <FaShieldAlt className="text-xl" />
-                </div>
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-400 rounded-full flex items-center justify-center">
-                  <FaCheck className="text-white text-xs" />
                 </div>
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3 text-center">
@@ -188,21 +177,13 @@ export default function Home() {
                 Automated billing, payment tracking, digital receipts, and
                 integrated payment gateways with reminders
               </p>
-              <div className="mt-4 text-center">
-                <span className="text-green-600 text-sm font-medium">
-                  Learn More →
-                </span>
-              </div>
             </div>
 
-            {/* Feature 3 - Enhanced */}
-            <div className="group bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100">
-              <div className="relative mb-6">
-                <div className="flex items-center justify-center h-16 w-16 rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 text-white mx-auto group-hover:scale-110 transition-transform">
+            {/* Feature 3 */}
+            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
+              <div className="mb-6">
+                <div className="flex items-center justify-center h-16 w-16 rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 text-white mx-auto">
                   <FaCalendarAlt className="text-xl" />
-                </div>
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-400 rounded-full flex items-center justify-center">
-                  <FaCheck className="text-white text-xs" />
                 </div>
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3 text-center">
@@ -212,21 +193,13 @@ export default function Home() {
                 Community hall booking, event scheduling, automated
                 notifications, and capacity management with calendar integration
               </p>
-              <div className="mt-4 text-center">
-                <span className="text-purple-600 text-sm font-medium">
-                  Learn More →
-                </span>
-              </div>
             </div>
 
-            {/* Feature 4 - Enhanced */}
-            <div className="group bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100">
-              <div className="relative mb-6">
-                <div className="flex items-center justify-center h-16 w-16 rounded-2xl bg-gradient-to-br from-orange-500 to-red-500 text-white mx-auto group-hover:scale-110 transition-transform">
+            {/* Feature 4 */}
+            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
+              <div className="mb-6">
+                <div className="flex items-center justify-center h-16 w-16 rounded-2xl bg-gradient-to-br from-orange-500 to-red-500 text-white mx-auto">
                   <FaBuilding className="text-xl" />
-                </div>
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-400 rounded-full flex items-center justify-center">
-                  <FaCheck className="text-white text-xs" />
                 </div>
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3 text-center">
@@ -236,11 +209,6 @@ export default function Home() {
                 AI-powered complaint categorization, photo/video evidence,
                 real-time tracking, and automated escalation system
               </p>
-              <div className="mt-4 text-center">
-                <span className="text-orange-600 text-sm font-medium">
-                  Learn More →
-                </span>
-              </div>
             </div>
           </div>
 
