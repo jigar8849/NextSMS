@@ -5,6 +5,7 @@ const SocitySetUp = require('../models/socitySetUp');
 const Employee = require('../models/employee');
 const ResidentBill = require('../models/residentBill');
 const Razorpay = require("razorpay");
+const crypto = require('crypto');
 
 // Add new complaint
 const addComplaint = async (req, res) => {
@@ -450,6 +451,47 @@ const createPaymentOrder = async (req, res) => {
   }
 };
 
+// Verify Razorpay payment and update bills
+const verifyPayment = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Unauthorized. Please log in as resident.' });
+    }
+
+    const { razorpay_payment_id, razorpay_order_id, razorpay_signature, billIds } = req.body;
+
+    if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature || !billIds || !Array.isArray(billIds)) {
+      return res.status(400).json({ error: 'Payment details and bill IDs are required' });
+    }
+
+    // Verify signature
+    const sign = razorpay_order_id + '|' + razorpay_payment_id;
+    const expectedSign = crypto
+      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+      .update(sign.toString())
+      .digest('hex');
+
+    if (razorpay_signature !== expectedSign) {
+      return res.status(400).json({ error: 'Payment verification failed' });
+    }
+
+    // Update bills to paid
+    await ResidentBill.updateMany(
+      { _id: { $in: billIds }, resident: req.user._id, isPaid: false },
+      { isPaid: true, paidAt: new Date() }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Payment verified and bills updated successfully'
+    });
+
+  } catch (error) {
+    console.error('Error verifying payment:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 module.exports = {
   addComplaint,
   getComplaints,
@@ -461,4 +503,5 @@ module.exports = {
   getEmployees,
   getBills,
   createPaymentOrder,
+  verifyPayment,
 };

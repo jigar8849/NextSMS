@@ -116,11 +116,37 @@ export default function Billing() {
         name: 'Society Management',
         description: 'Bill Payment',
         order_id: data.orderId,
-        handler: function (response: any) {
+        handler: async function (response: any) {
           // Payment successful
-          setBills(prev => prev.map(b => (selected[b.id] ? { ...b, status: "Paid" } : b)));
-          setSelected({});
-          alert("Payment successful ✅");
+          try {
+            // Verify payment and update backend
+            const verifyResponse = await fetch('/api/resident/payment/verify', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature,
+                billIds: selectedBillIds,
+              }),
+            });
+
+            const verifyData = await verifyResponse.json();
+
+            if (verifyResponse.ok && verifyData.success) {
+              // Update UI
+              setBills(prev => prev.map(b => (selected[b.id] ? { ...b, status: "Paid" } : b)));
+              setSelected({});
+              alert("Payment successful ✅");
+            } else {
+              alert("Payment verification failed. Please contact support.");
+            }
+          } catch (error) {
+            console.error('Verification error:', error);
+            alert("Payment successful but verification failed. Please refresh the page.");
+          }
         },
         prefill: {
           name: 'Resident',

@@ -15,6 +15,7 @@ const {
   getEmployees,
   getBills,
   createPaymentOrder,
+  verifyPayment,
 } = require('../controllers/residentController');
 
 // Complaints routes
@@ -38,5 +39,6 @@ router.get('/bills', authenticateResident, getBills);
 
 // Payment routes
 router.post('/payment/order', authenticateResident, createPaymentOrder);
+router.post('/payment/verify', authenticateResident, verifyPayment);
 
 module.exports = router;
