@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import {
   CalendarCheck2,
@@ -20,20 +20,40 @@ type Bill = {
   status: BillStatus;
 };
 
-const DEMO_BILLS: Bill[] = [
-  { id: "b1", title: "Maintenance", description: "Monthly society maintenance", dueDate: "2025-08-15", amount: 700, status: "Unpaid" },
-  { id: "b2", title: "Water Bill", description: "July water usage",            dueDate: "2025-08-20", amount: 450, status: "Paid" },
-  { id: "b3", title: "Electricity", description: "Unit #A-302",                dueDate: "2025-08-10", amount: 5100, status: "Overdue" },
-];
-
 const inr = (n: number) => `₹${n.toLocaleString("en-IN")}`;
 const isUnpaid = (b: Bill) => b.status !== "Paid";
 
 export default function Billing() {
-  const [bills, setBills] = useState<Bill[]>(DEMO_BILLS);
-  const [selected, setSelected] = useState<Record<string, boolean>>(
-    () => DEMO_BILLS.filter(isUnpaid).reduce((acc, b) => ({ ...acc, [b.id]: true }), {})
-  );
+  const [bills, setBills] = useState<Bill[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    const fetchBills = async () => {
+      try {
+        const response = await fetch('/api/resident/bills');
+        if (!response.ok) {
+          throw new Error('Failed to fetch bills');
+        }
+        const data = await response.json();
+        if (data.success) {
+          setBills(data.bills);
+          // Initialize selected with unpaid bills
+          const unpaidSelected = data.bills.filter(isUnpaid).reduce((acc, b) => ({ ...acc, [b.id]: true }), {});
+          setSelected(unpaidSelected);
+        } else {
+          throw new Error(data.error || 'Failed to fetch bills');
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBills();
+  }, []);
 
   const stats = useMemo(() => {
     const pending = bills.filter(isUnpaid);
@@ -66,6 +86,14 @@ export default function Billing() {
     setSelected({});
     alert("Payment successful (demo) ✅");
   };
+
+  if (loading) {
+    return <div className="mt-15 text-center">Loading bills...</div>;
+  }
+
+  if (error) {
+    return <div className="mt-15 text-center text-red-600">Error: {error}</div>;
+  }
 
   return (
     <div className="space-y-6 mt-15">

@@ -1,10 +1,13 @@
-# TODO: Implement Backend Logic for Admin Payments Page
+# TODO for Resident Billing Real Data Implementation
 
-## Tasks
-- [x] Add `getPayments` function in `backend/controllers/adminController.js` to fetch ResidentBill documents with populated resident and billTemplate data, and calculate real values (currentAmount, isOverdue, daysOverdue, paymentStatus, etc.)
-- [x] Add GET `/admin/payments` route in `backend/routes/admin.js`
-- [x] Add `markPaymentAsPaid` function in `backend/controllers/adminController.js` for marking payments as paid
-- [x] Add GET `/admin/payments/mark/:id` route in `backend/routes/admin.js` for marking payments as paid
-- [x] Update `createBill` function to create ResidentBill documents for each resident when a bill template is created
-- [x] Test the backend API endpoints to ensure correct data return (Backend server started successfully, endpoint returns 401 Unauthorized as expected for unauthenticated requests)
-- [x] Verify frontend displays real values from database (Implementation complete, authentication required for access)
+## Backend Changes
+- [ ] Add getBills function in backend/controllers/residentController.js to fetch ResidentBill for logged-in resident, populate billTemplate, map to frontend format.
+- [ ] Add GET /api/bills route in backend/routes/resident.js, using isAuthenticated middleware.
+
+## Frontend Changes
+- [ ] Create frontend/src/app/api/resident/bills/route.ts to proxy GET request to backend /resident/api/bills.
+- [ ] Update frontend/src/components/resident/Billing.tsx to fetch bills from /api/resident/bills using useEffect, replace DEMO_BILLS with fetched data, handle loading and errors.
+
+## Testing
+- [ ] Test the API endpoint for fetching bills.
+- [ ] Verify authentication and data display in the resident billing page.

@@ -35,4 +35,7 @@ router.get('/parking', isAuthenticated, residentController.getParking);
 // GET /resident/employees - Get employees data for the logged-in resident's society
 router.get('/employees', isAuthenticated, residentController.getEmployees);
 
+// GET /resident/api/bills - Get bills for logged-in resident
+router.get('/api/bills', isAuthenticated, residentController.getBills);
+
 module.exports = router;

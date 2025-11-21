@@ -3,6 +3,7 @@ const Event = require('../models/event');
 const NewMember = require('../models/newMember');
 const SocitySetUp = require('../models/socitySetUp');
 const Employee = require('../models/employee');
+const ResidentBill = require('../models/residentBill');
 
 // Add new complaint
 const addComplaint = async (req, res) => {
@@ -345,6 +346,52 @@ const deleteEvent = async (req, res) => {
   }
 };
 
+// Get bills for the logged-in resident
+const getBills = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Unauthorized. Please log in as resident.' });
+    }
+
+    // Fetch bills for the logged-in resident, populate billTemplate
+    const bills = await ResidentBill.find({ resident: req.user._id })
+      .populate('billTemplate')
+      .sort({ createdAt: -1 });
+
+    // Map to frontend expected format
+    const mappedBills = bills.map(bill => {
+      const template = bill.billTemplate;
+      let status = 'Unpaid';
+      if (bill.isPaid) {
+        status = 'Paid';
+      } else {
+        const now = new Date();
+        if (new Date(bill.dueDate) < now) {
+          status = 'Overdue';
+        }
+      }
+
+      return {
+        id: bill._id.toString(),
+        title: template.title,
+        description: template.type, // Use type as description
+        dueDate: bill.dueDate.toISOString(),
+        amount: bill.amount,
+        status: status,
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      bills: mappedBills
+    });
+
+  } catch (error) {
+    console.error('Error fetching bills:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 module.exports = {
   addComplaint,
   getComplaints,
@@ -354,4 +401,5 @@ module.exports = {
   deleteEvent,
   getParking,
   getEmployees,
+  getBills,
 };
