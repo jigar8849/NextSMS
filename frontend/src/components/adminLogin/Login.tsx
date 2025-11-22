@@ -42,7 +42,8 @@ export default function AdminLogin({ error, success }: Props) {
     setLoading(true);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/admin/login`, {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+      const res = await fetch(`${backendUrl}/admin/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

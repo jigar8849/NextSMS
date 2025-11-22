@@ -110,7 +110,7 @@ export default function CreateSocietyAccount({ error, success }: Props) {
     setLoading(true);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/admin/create-account`, {
+      const res = await fetch(`https://nextsms.onrender.com/admin/create-account`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

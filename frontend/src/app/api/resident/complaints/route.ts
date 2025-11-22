@@ -1,66 +1,49 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
-  try {
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
+    const backendUrl = process.env.BACKEND_URL || 'https://nextsms.onrender.com';
     const response = await fetch(`${backendUrl}/resident/api/complaints`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        cookie: request.headers.get('cookie') || '',
-      },
-      credentials: 'include',
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Cookie': request.headers.get('cookie') || '',
+        },
+        credentials: 'include',
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: 'Failed to fetch complaints' }));
-      return NextResponse.json(
-        { success: false, message: errorData.message },
-        { status: response.status }
-      );
+        throw new Error(`Backend API error: ${response.status}`);
     }
 
-    const data = await response.json();
-    return NextResponse.json(data);
-  } catch (error) {
-    console.error('Error fetching complaints:', error);
-    return NextResponse.json(
-      { success: false, message: 'Internal server error' },
-      { status: 500 }
-    );
-  }
+    const complaintsData = await response.json();
+
+    return NextResponse.json(complaintsData);
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
-    const body = await request.json();
+    try {
+        const backendUrl = process.env.BACKEND_URL || 'https://nextsms.onrender.com';
+        const body = await request.json();
 
-    const response = await fetch(`${backendUrl}/resident/api/complaints`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        cookie: request.headers.get('cookie') || '',
-      },
-      credentials: 'include',
-      body: JSON.stringify(body),
-    });
+        const response = await fetch(`${backendUrl}/resident/api/complaints`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Cookie': request.headers.get('cookie') || '',
+            },
+            credentials: 'include',
+            body: JSON.stringify(body),
+        });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: 'Failed to submit complaint' }));
-      return NextResponse.json(
-        { success: false, message: errorData.error },
-        { status: response.status }
-      );
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+            return NextResponse.json(errorData, { status: response.status });
+        }
+
+        const data = await response.json();
+        return NextResponse.json(data);
+    } catch (error) {
+        console.error('Error creating complaint:', error);
+        return NextResponse.json({ error: 'Failed to create complaint' }, { status: 500 });
     }
-
-    const data = await response.json();
-    return NextResponse.json(data);
-  } catch (error) {
-    console.error('Error submitting complaint:', error);
-    return NextResponse.json(
-      { success: false, message: 'Internal server error' },
-      { status: 500 }
-    );
-  }
 }

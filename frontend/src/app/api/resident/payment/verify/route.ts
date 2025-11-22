@@ -5,7 +5,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     // Fetch data from backend API
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
+    const backendUrl = process.env.BACKEND_URL || 'https://nextsms.onrender.com';
     const response = await fetch(`${backendUrl}/resident/payment/verify`, {
       method: 'POST',
       headers: {

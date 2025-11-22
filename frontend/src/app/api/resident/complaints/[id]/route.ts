@@ -2,7 +2,7 @@
 
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
+    const backendUrl = process.env.BACKEND_URL || 'https://nextsms.onrender.com';
     const response = await fetch(`${backendUrl}/resident/api/complaints/${params.id}`, {
       method: 'DELETE',
       headers: {

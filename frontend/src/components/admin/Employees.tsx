@@ -49,7 +49,7 @@ export default function EmployeeManagement() {
       try {
         setLoading(true);
         setError(null);
-        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://nextsms.onrender.com';
         const response = await fetch(`${backendUrl}/admin/employees`, {
           method: 'GET',
           headers: {

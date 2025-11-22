@@ -40,7 +40,7 @@ export default function ManageComplaintCard({
     setSuccess(null);
 
     try {
-      const response = await fetch(`http://localhost:5000/admin/complaints/${complaintId}/status`, {
+      const response = await fetch(`https://nextsms.onrender.com/admin/complaints/${complaintId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

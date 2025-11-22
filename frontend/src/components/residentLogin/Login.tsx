@@ -34,7 +34,8 @@ export default function ResidentLogin({ error, success }: Props) {
     setLoading(true);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/admin/resident-login`, {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+      const res = await fetch(`${backendUrl}/admin/resident-login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

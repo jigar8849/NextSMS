@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Call backend API to create bill
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
+    const backendUrl = process.env.BACKEND_URL || 'https://nextsms.onrender.com';
     const response = await fetch(`${backendUrl}/admin/createBill`, {
       method: 'POST',
       headers: {
