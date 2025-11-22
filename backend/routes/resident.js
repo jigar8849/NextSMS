@@ -22,11 +22,10 @@ const {
 router.post('/complaints', addComplaint); // Temporarily remove auth for testing
 router.get('/complaints', getComplaints); // Temporarily remove auth for testing
 
-// Events routes
 router.post('/events', addEvent); // Temporarily remove auth for testing
 router.get('/events', getEvents); // No auth for viewing
-router.put('/events/:id', authenticateResident, updateEvent);
-router.delete('/events/:id', authenticateResident, deleteEvent);
+router.put('/events/:id', updateEvent);
+router.delete('/events/:id', deleteEvent);
 
 // Parking routes
 router.get('/parking', getParking); // Temporarily remove auth for testing
@@ -34,11 +33,10 @@ router.get('/parking', getParking); // Temporarily remove auth for testing
 // Employees routes
 router.get('/employees', getEmployees); // Temporarily remove auth for testing
 
-// Bills routes
-router.get('/bills', authenticateResident, getBills);
+router.get('/bills', getBills);
 
 // Payment routes
-router.post('/payment/order', authenticateResident, createPaymentOrder);
-router.post('/payment/verify', authenticateResident, verifyPayment);
+router.post('/payment/order', createPaymentOrder);
+router.post('/payment/verify', verifyPayment);
 
 module.exports = router;

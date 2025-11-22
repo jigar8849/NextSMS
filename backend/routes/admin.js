@@ -36,8 +36,7 @@ router.post('/login', adminController.adminLogin);
 // POST /admin/logout - Admin logout
 router.post('/logout', adminController.adminLogout);
 
-// POST /admin/addNewResident - Add new resident
-router.post('/addNewResident', isAuthenticated, adminController.addNewResident);
+router.post('/addNewResident', adminController.addNewResident);
 
 // POST /admin/createBill - Create bill template
 router.post('/createBill', adminController.createBill);
@@ -45,31 +44,22 @@ router.post('/createBill', adminController.createBill);
 // POST /resident-login - Resident login
 router.post('/resident-login', adminController.residentLogin);
 
-// POST /admin/addNewEmployee - Add new employee
 router.post('/addNewEmployee',  adminController.addNewEmployee);
 
-// GET /admin/employees - Get all employees for the logged-in admin's society
-router.get('/employees', isAuthenticated, adminController.getEmployees);
+router.get('/employees', adminController.getEmployees);
 
-// GET /admin/api/residents - Get all residents for the logged-in admin's society
-router.get('/api/residents', isAuthenticated, adminController.getResidents);
+router.get('/api/residents', adminController.getResidents);
 
-// DELETE /admin/residents/:id - Delete a resident by ID
-router.delete('/residents/:id', isAuthenticated, adminController.deleteResident);
+router.delete('/residents/:id', adminController.deleteResident);
 
-// GET /admin/parking - Get parking data for the logged-in admin's society
-router.get('/parking', isAuthenticated, adminController.getParking);
+router.get('/parking', adminController.getParking);
 
-// GET /admin/complaints - Get all complaints for the logged-in admin's society
-router.get('/complaints', isAuthenticated, adminController.getComplaints);
+router.get('/complaints', adminController.getComplaints);
 
-// PUT /admin/complaints/:id/status - Update complaint status
-router.put('/complaints/:id/status', isAuthenticated, adminController.updateComplaintStatus);
+router.put('/complaints/:id/status', adminController.updateComplaintStatus);
 
-// GET /admin/payments - Get all payments for the logged-in admin's society
-router.get('/payments', isAuthenticated, adminController.getPayments);
+router.get('/payments', adminController.getPayments);
 
-// GET /admin/payments/mark/:id - Mark payment as paid
-router.get('/payments/mark/:id', isAuthenticated, adminController.markPaymentAsPaid);
+router.get('/payments/mark/:id', adminController.markPaymentAsPaid);
 
 module.exports = router;
