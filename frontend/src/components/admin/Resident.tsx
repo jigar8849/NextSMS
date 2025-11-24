@@ -26,7 +26,9 @@ export default function ResidentsPage() {
   const fetchResidents = async () => {
     try {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-      const response = await fetch(`${backendUrl}/admin/residents`);
+      const response = await fetch(`${backendUrl}/admin/residents`, {
+        credentials: 'include', // Send cookies with request
+      });
       if (!response.ok) {
         throw new Error('Failed to fetch residents');
       }

@@ -230,6 +230,11 @@ const addNewResident = async (req, res) => {
       role = 'resident'
     } = req.body;
 
+    // Check if admin is authenticated
+    if (!req.user) {
+      return res.status(401).json({ error: 'Unauthorized. Please log in as admin.' });
+    }
+
     // Validation
     if (!first_name || !last_name || !email || !create_password) {
       return res.status(400).json({ error: 'Required fields are missing' });

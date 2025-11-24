@@ -48,7 +48,7 @@ router.post('/addNewEmployee',  adminController.addNewEmployee);
 
 router.get('/employees', adminController.getEmployees);
 
-router.get('/api/residents', adminController.getResidents);
+router.get('/residents', adminController.getResidents);
 
 router.delete('/residents/:id', adminController.deleteResident);
 
