@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminController');
 const passport = require('passport');
+const { authenticateAdmin } = require('../middleware/auth'); // add authenticateAdmin import
 
 // Middleware to check if admin is authenticated
 const isAuthenticated = (req, res, next) => {
@@ -44,7 +45,7 @@ router.post('/createBill', adminController.createBill);
 // POST /resident-login - Resident login
 router.post('/resident-login', adminController.residentLogin);
 
-router.post('/addNewEmployee',  adminController.addNewEmployee);
+router.post('/addNewEmployee', authenticateAdmin, adminController.addNewEmployee);
 
 router.get('/employees', adminController.getEmployees);
 
