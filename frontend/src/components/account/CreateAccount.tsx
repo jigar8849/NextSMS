@@ -1,18 +1,54 @@
-'use client'
+'use client';
 import React, { useState } from "react";
 import Link from "next/link";
 import { FaArrowLeft, FaBuilding } from "react-icons/fa";
-// import { useRouter } from "next/navigation"; // uncomment if you want to redirect on success
 
 type Props = {
   error?: string;
   success?: string;
 };
 
-export default function CreateSocietyAccount({ error, success }: Props) {
-  // const router = useRouter();
+type FormState = {
+  socity_name: string;
+  total_flat: string;
+  total_block: string;
+  total_floor: string;
+  house_per_level: string;
+  total_four_wheeler_slot: string;
+  total_two_wheeler_slot: string;
+  socity_address: string;
+  city: string;
+  state: string;
+  pincode: string;
+  admin_name: string;
+  email: string;
+  phone: string;
+  password: string;
+  confirm_password: string;
+};
 
-  const [form, setForm] = useState({
+// --- Payload type after converting strings to numbers ---
+type Payload = {
+  socity_name: string;
+  socity_address: string;
+  city: string;
+  state: string;
+  pincode: number;
+  total_block: number;
+  total_floor: number;
+  total_flat: number;
+  house_per_level: number;
+  total_four_wheeler_slot: number;
+  total_two_wheeler_slot: number;
+  admin_name: string;
+  phone: number;
+  email: string;
+  password: string;
+  confirm_password: string;
+};
+
+export default function CreateSocietyAccount({ error, success }: Props) {
+  const [form, setForm] = useState<FormState>({
     socity_name: "",
     total_flat: "",
     total_block: "",
@@ -35,57 +71,64 @@ export default function CreateSocietyAccount({ error, success }: Props) {
   const [localSuccess, setLocalSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  function handleChange(
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) {
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
-  function validate() {
+  function validateForm(): string | null {
     if (!form.socity_name || !form.email || !form.password || !form.confirm_password)
       return "Please fill all required fields.";
+
     if (form.password.length < 6)
       return "Password must be at least 6 characters.";
+
     if (form.password !== form.confirm_password)
       return "Passwords do not match.";
+
     return null;
   }
 
-  function toNumber(v: string) {
+  const toNumber = (v: string): number | null => {
     const n = Number(v);
     return Number.isFinite(n) ? n : null;
-  }
+  };
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
     if (loading) return;
 
-    const validation = validate();
+    const validation = validateForm();
     if (validation) {
-      setLocalSuccess(null);
       setLocalError(validation);
+      setLocalSuccess(null);
       return;
     }
 
-    const payload = {
+    // Convert to numeric payload safely
+    const payload: Payload = {
       socity_name: form.socity_name,
       socity_address: form.socity_address,
       city: form.city,
       state: form.state,
-      pincode: toNumber(form.pincode),
-      total_block: toNumber(form.total_block),
-      total_floor: toNumber(form.total_floor),
-      total_flat: toNumber(form.total_flat),
-      house_per_level: toNumber(form.house_per_level),
-      total_four_wheeler_slot: toNumber(form.total_four_wheeler_slot),
-      total_two_wheeler_slot: toNumber(form.total_two_wheeler_slot),
+      pincode: toNumber(form.pincode) as number,
+      total_block: toNumber(form.total_block) as number,
+      total_floor: toNumber(form.total_floor) as number,
+      total_flat: toNumber(form.total_flat) as number,
+      house_per_level: toNumber(form.house_per_level) as number,
+      total_four_wheeler_slot: toNumber(form.total_four_wheeler_slot) as number,
+      total_two_wheeler_slot: toNumber(form.total_two_wheeler_slot) as number,
       admin_name: form.admin_name,
-      phone: toNumber(form.phone),
+      phone: toNumber(form.phone) as number,
       email: form.email,
       password: form.password,
       confirm_password: form.confirm_password,
     };
 
-    // Validate numeric fields explicitly so we don't send null/NaN
-    const numericFields = [
+    // Validate all numeric fields
+    const numericKeys: (keyof Payload)[] = [
       "pincode",
       "total_block",
       "total_floor",
@@ -94,13 +137,12 @@ export default function CreateSocietyAccount({ error, success }: Props) {
       "total_four_wheeler_slot",
       "total_two_wheeler_slot",
       "phone",
-    ] as const;
+    ];
 
-    for (const f of numericFields) {
-      // @ts-ignore - dynamic access
-      if (payload[f] === null) {
+    for (const k of numericKeys) {
+      if (typeof payload[k] !== "number" || Number.isNaN(payload[k])) {
+        setLocalError(`Please enter a valid number for ${k.replaceAll("_", " ")}`);
         setLocalSuccess(null);
-        setLocalError(`Please enter a valid number for ${f.replaceAll("_", " ")}`);
         return;
       }
     }
@@ -110,7 +152,7 @@ export default function CreateSocietyAccount({ error, success }: Props) {
     setLoading(true);
 
     try {
-      const res = await fetch(`https://nextsms.onrender.com/admin/create-account`, {
+      const res = await fetch("https://nextsms.onrender.com/admin/create-account", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -120,16 +162,14 @@ export default function CreateSocietyAccount({ error, success }: Props) {
       const body = await res.json().catch(() => null);
 
       if (!res.ok) {
-        setLocalSuccess(null);
         setLocalError(body?.error || `Request failed (${res.status})`);
+        setLocalSuccess(null);
         return;
       }
 
-      // Success: { ok:true, message, id }
       setLocalError(null);
       setLocalSuccess(`${body?.message || "Account created"} (id: ${body?.id})`);
 
-      // Optional: reset form
       setForm({
         socity_name: "",
         total_flat: "",
@@ -149,11 +189,10 @@ export default function CreateSocietyAccount({ error, success }: Props) {
         confirm_password: "",
       });
 
-      // Optional: redirect to dashboard
-      // router.push("/admin/dashboard");
-    } catch (err: any) {
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Unknown network error";
+      setLocalError(errorMessage);
       setLocalSuccess(null);
-      setLocalError(err?.message || "Network error");
     } finally {
       setLoading(false);
     }

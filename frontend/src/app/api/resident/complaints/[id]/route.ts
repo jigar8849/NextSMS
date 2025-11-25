@@ -1,9 +1,15 @@
-  import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(
+  request: NextRequest, 
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
+    // Await the params promise to get the actual id
+    const { id } = await params;
+    
     const backendUrl = process.env.BACKEND_URL || 'https://nextsms.onrender.com';
-    const response = await fetch(`${backendUrl}/resident/api/complaints/${params.id}`, {
+    const response = await fetch(`${backendUrl}/resident/api/complaints/${id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',

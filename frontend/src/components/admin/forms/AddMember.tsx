@@ -1,151 +1,175 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Plus, X } from 'lucide-react'; // optional; or swap with any icon lib
+import { Plus, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 type Props = {
-  // If you want to override the API path from a parent
-  apiPath?: string; // e.g. "/resident/register"
+  apiPath?: string;
+};
+
+// Define a type-safe payload
+type MemberPayload = {
+  first_name: string;
+  last_name: string;
+  birth_date: string;
+  role: string;
+  mobile_number: number;
+  emergency_number: number;
+  number_of_member: number;
+  name_of_each_member: string[];
+  block: string;
+  floor_number: number;
+  status: string;
+  two_wheeler?: string;
+  four_wheeler?: string;
+  flat_number: number;
+  email: string;
+  create_password: string;
 };
 
 export default function AddNewMemberForm({ apiPath }: Props) {
   const router = useRouter();
 
   const API_BASE = process.env.NEXT_PUBLIC_API_BASE || '';
-  const API_PATH = apiPath || '/admin/addNewResident'; // <— adjust if needed
+  const API_PATH = apiPath || '/admin/addNewResident';
 
+  // Form states
   const [first_name, setFirstName] = useState('');
   const [last_name, setLastName] = useState('');
   const [mobile_number, setMobile] = useState('');
   const [emergency_number, setEmergency] = useState('');
-  const [birth_date, setBirthDate] = useState(''); // yyyy-mm-dd from <input type="date">
+  const [birth_date, setBirthDate] = useState('');
   const [number_of_member, setNumMembers] = useState('');
-  const [name_of_each_member, setMembers] = useState<string[]>(['']); // at least 1 row
+  const [name_of_each_member, setMembers] = useState<string[]>(['']);
   const [block, setBlock] = useState('');
   const [floor_number, setFloor] = useState('');
   const [flat_number, setFlat] = useState('');
   const [four_wheeler, setFour] = useState('');
   const [two_wheeler, setTwo] = useState('');
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState(''); // create_password for register()
+  const [password, setPassword] = useState('');
 
   const [loading, setLoading] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   const [localSuccess, setLocalSuccess] = useState<string | null>(null);
 
-  function toNumber(v: string) {
-    const n = Number(v);
-    return Number.isFinite(n) ? n : null;
-  }
+  const toNumber = (value: string): number | null => {
+    const n = Number(value);
+    return isFinite(n) ? n : null;
+  };
 
-  function validate(): string | null {
+  const validate = (): string | null => {
     if (!first_name || !last_name) return 'Please enter first and last name.';
     if (!mobile_number || !emergency_number) return 'Please enter both mobile numbers.';
     if (!birth_date) return 'Please select birth date.';
-    if (!number_of_member || toNumber(number_of_member) === null) return 'Enter a valid number of members.';
+    if (toNumber(number_of_member) === null) return 'Enter a valid number of members.';
     if (!block) return 'Block is required.';
-    if (!floor_number || toNumber(floor_number) === null) return 'Enter a valid floor number.';
-    if (!flat_number || toNumber(flat_number) === null) return 'Enter a valid flat number.';
+    if (toNumber(floor_number) === null) return 'Enter a valid floor number.';
+    if (toNumber(flat_number) === null) return 'Enter a valid flat number.';
     if (!email) return 'Email is required.';
-    if (!password || password.length < 6) return 'Password must be at least 6 characters.';
+    if (password.length < 6) return 'Password must be at least 6 characters.';
+
     const names = name_of_each_member.map(n => n.trim()).filter(Boolean);
     if (names.length === 0) return 'Add at least one member name.';
+
     return null;
-  }
+  };
 
-  function setMemberAt(i: number, value: string) {
+  const setMemberAt = (i: number, value: string) => {
     setMembers(prev => prev.map((m, idx) => (idx === i ? value : m)));
-  }
+  };
 
-  function addMemberField() {
-    setMembers(prev => [...prev, '']);
-  }
+  const addMemberField = () => setMembers(prev => [...prev, '']);
 
-  function removeMemberField(i: number) {
+  const removeMemberField = (i: number) => {
     setMembers(prev => (prev.length === 1 ? [''] : prev.filter((_, idx) => idx !== i)));
-  }
+  };
 
-  async function handleSubmit(e: React.FormEvent) {
+  const createPayload = (): MemberPayload | null => {
+    const nums = {
+      mobile: toNumber(mobile_number),
+      emergency: toNumber(emergency_number),
+      members: toNumber(number_of_member),
+      floor: toNumber(floor_number),
+      flat: toNumber(flat_number),
+    };
+
+    if (
+      nums.mobile === null ||
+      nums.emergency === null ||
+      nums.members === null ||
+      nums.floor === null ||
+      nums.flat === null
+    ) {
+      setLocalError('Please enter valid numeric values.');
+      return null;
+    }
+
+    return {
+      first_name,
+      last_name,
+      birth_date,
+      role: 'resident',
+      mobile_number: nums.mobile,
+      emergency_number: nums.emergency,
+      number_of_member: nums.members,
+      name_of_each_member: name_of_each_member.map(n => n.trim()).filter(Boolean),
+      block,
+      floor_number: nums.floor,
+      status: 'active',
+      two_wheeler: two_wheeler || undefined,
+      four_wheeler: four_wheeler || undefined,
+      flat_number: nums.flat,
+      email,
+      create_password: password,
+    };
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading) return;
 
-    const message = validate();
-    if (message) {
-      setLocalError(message);
+    const error = validate();
+    if (error) {
+      setLocalError(error);
       setLocalSuccess(null);
       return;
     }
+
+    const payload = createPayload();
+    if (!payload) return;
 
     setLoading(true);
     setLocalError(null);
     setLocalSuccess(null);
 
-    // Convert to payload expected by your schema/route
-    const payload = {
-      first_name,
-      last_name,
-      birth_date, // "yyyy-mm-dd" is valid ISO date for Mongo (Date will parse)
-      role: 'resident', // default; safe to include
-      mobile_number: toNumber(mobile_number),
-      emergency_number: toNumber(emergency_number),
-      number_of_member: toNumber(number_of_member),
-      name_of_each_member: name_of_each_member.map(n => n.trim()).filter(Boolean),
-      block,
-      floor_number: toNumber(floor_number),
-      status: 'active',
-      two_wheeler: two_wheeler.trim() || undefined,
-      four_wheeler: four_wheeler.trim() || undefined,
-      flat_number: toNumber(flat_number),
-      email,
-      create_password: password, // your route should call NewMember.register(user, password)
-    };
-
-    // Final safety check for numeric fields
-    const numericKeys = [
-      'mobile_number',
-      'emergency_number',
-      'number_of_member',
-      'floor_number',
-      'flat_number',
-    ] as const;
-    for (const key of numericKeys) {
-      // @ts-ignore
-      if (payload[key] === null) {
-        setLocalError(`Please enter a valid number for ${key.replaceAll('_', ' ')}`);
-        setLoading(false);
-        return;
-      }
-    }
-
     try {
       const res = await fetch(`${API_BASE}${API_PATH}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify(payload),
       });
 
-      const body = await res.json().catch(() => null);
+      const body: { message?: string; error?: string } = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        setLocalError(body?.error || `Request failed (${res.status})`);
+        setLocalError(body.error || `Request failed (${res.status})`);
         return;
       }
 
-      setLocalSuccess(body?.message || 'Member created successfully');
-      // Optional: redirect after success
-      // router.push('/resident/owners');
-      // Or reset form:
+      setLocalSuccess(body.message || 'Member created successfully');
       resetForm();
-    } catch (err: any) {
-      setLocalError(err?.message || 'Network error');
+    } catch (err) {
+      const error = err instanceof Error ? err.message : 'Network error';
+      setLocalError(error);
     } finally {
       setLoading(false);
     }
-  }
+  };
 
-  function resetForm() {
+  const resetForm = () => {
     setFirstName('');
     setLastName('');
     setMobile('');
@@ -160,7 +184,7 @@ export default function AddNewMemberForm({ apiPath }: Props) {
     setTwo('');
     setEmail('');
     setPassword('');
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-6 px-3 sm:px-6 lg:px-8">

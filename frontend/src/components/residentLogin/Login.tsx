@@ -20,54 +20,54 @@ export default function ResidentLogin({ error, success }: Props) {
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (loading) return;
+  e.preventDefault();
+  if (loading) return;
 
-    if (!email || !password) {
-      setLocalError("Please enter both email and password.");
-      setLocalSuccess(null);
+  if (!email || !password) {
+    setLocalError("Please enter both email and password.");
+    setLocalSuccess(null);
+    return;
+  }
+
+  setLocalError(null);
+  setLocalSuccess(null);
+  setLoading(true);
+
+  try {
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+
+    const res = await fetch(`${backendUrl}/resident/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const data = await res.json().catch(() => null);
+
+    if (!res.ok) {
+      setLocalError(data?.error || "Login failed.");
       return;
     }
 
-    setLocalError(null);
-    setLocalSuccess(null);
-    setLoading(true);
-
-    try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-      const res = await fetch(`${backendUrl}/admin/resident-login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json", // ask backend for JSON
-        },
-        credentials: "include", // store session cookie
-        body: JSON.stringify({
-          email,
-          password, // passport-local expects 'password'
-        }),
-      });
-
-      const body = await res.json().catch(() => null);
-
-      if (!res.ok) {
-        setLocalError(body?.error || `Login failed (${res.status})`);
-        setLocalSuccess(null);
-        return;
-      }
-
-      setLocalSuccess(body?.message || "Logged in");
-      setLocalError(null);
-
-      const to = body?.redirect || "/resident/dashboard";
-      router.push(to);
-    } catch (err: any) {
-      setLocalError(err?.message || "Network error");
-      setLocalSuccess(null);
-    } finally {
-      setLoading(false);
+    // ⭐ SAVE TOKEN
+    if (data.token) {
+      localStorage.setItem("residentToken", data.token);
     }
-  };
+
+    setLocalSuccess(data?.message || "Logged in");
+
+    router.push(data?.redirect || "/resident/dashboard");
+    
+  } catch (err: any) {
+    setLocalError("Network error");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-100 to-indigo-50">

@@ -35,11 +35,12 @@ export default function AddEmployeeForm() {
     return Number.isFinite(n) ? n : null;
   }
 
-  function validate(): string | null {
+function validate(): string | null {
     if (!name.trim()) return 'Please enter employee name.';
     if (!role) return 'Please select a role.';
     if (!contact.trim()) return 'Please enter contact number.';
-    if (!salary || toNumber(salary) === null || toNumber(salary) <= 0) return 'Please enter a valid salary.';
+    const salaryNumber = toNumber(salary);
+    if (!salary || salaryNumber === null || salaryNumber <= 0) return 'Please enter a valid salary.';
     if (!joinDate) return 'Please select join date.';
     if (!location.trim()) return 'Please enter location.';
     if (!status) return 'Please select status.';

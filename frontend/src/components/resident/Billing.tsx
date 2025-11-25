@@ -7,16 +7,17 @@ import {
   CheckCircle2,
   CreditCard,
   Download,
-  AlertCircle, // ← replaced ExclamationTriangle
+  AlertCircle,
 } from "lucide-react";
 
 type BillStatus = "Unpaid" | "Paid" | "Overdue";
+
 type Bill = {
   id: string;
   title: string;
   description: string;
-  dueDate: string; // ISO date
-  amount: number;  // INR
+  dueDate: string;
+  amount: number;
   status: BillStatus;
 };
 
@@ -29,24 +30,30 @@ export default function Billing() {
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
 
+  /** Fetch Bills + Load Razorpay Script */
   useEffect(() => {
     const fetchBills = async () => {
       try {
-        const response = await fetch('/api/resident/bills');
-        if (!response.ok) {
-          throw new Error('Failed to fetch bills');
-        }
+        const response = await fetch("/api/resident/bills");
         const data = await response.json();
-        if (data.success) {
-          setBills(data.bills);
-          // Initialize selected with unpaid bills
-          const unpaidSelected = data.bills.filter(isUnpaid).reduce((acc: Record<string, boolean>, b: Bill) => ({ ...acc, [b.id]: true }), {});
-          setSelected(unpaidSelected);
-        } else {
-          throw new Error(data.error || 'Failed to fetch bills');
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.error || "Failed to fetch bills");
         }
+
+        setBills(data.bills);
+
+        // Default select only unpaid bills
+        const initialSel = data.bills
+          .filter(isUnpaid)
+          .reduce((acc: Record<string, boolean>, b: Bill) => {
+            acc[b.id] = true;
+            return acc;
+          }, {} as Record<string, boolean>);
+
+        setSelected(initialSel);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
+        setError(err instanceof Error ? err.message : "Something went wrong");
       } finally {
         setLoading(false);
       }
@@ -54,239 +61,265 @@ export default function Billing() {
 
     fetchBills();
 
-    // Load Razorpay script
-    if (!(window as any).Razorpay) {
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-      script.async = true;
-      document.head.appendChild(script);
+    /** Load Razorpay checkout script */
+    if (!window.Razorpay) {
+      const s = document.createElement("script");
+      s.src = "https://checkout.razorpay.com/v1/checkout.js";
+      s.async = true;
+      document.head.appendChild(s);
     }
   }, []);
 
+  /** ------------------ STATS ------------------ **/
   const stats = useMemo(() => {
-    const pending = bills.filter(isUnpaid);
-    const pendingTotal = pending.reduce((s, b) => s + b.amount, 0);
-    const paidThisMonth = bills.filter(b => b.status === "Paid").reduce((s, b) => s + b.amount, 0);
-    const nextDue = pending.length ? pending.slice().sort((a,b)=>a.dueDate.localeCompare(b.dueDate))[0].dueDate : null;
+    const unpaid = bills.filter(isUnpaid);
+    const pendingTotal = unpaid.reduce((s, b) => s + b.amount, 0);
 
-    const selectedTotal = bills.filter(b => selected[b.id]).reduce((s, b) => s + b.amount, 0);
-    const allUnpaidIds = bills.filter(isUnpaid).map(b => b.id);
-    const allUnpaidSelected = allUnpaidIds.length > 0 && allUnpaidIds.every(id => !!selected[id]);
+    const paidThisMonth = bills
+      .filter((b) => b.status === "Paid")
+      .reduce((s, b) => s + b.amount, 0);
 
-    return { pendingTotal, paidThisMonth, nextDue, selectedTotal, allUnpaidSelected };
+    const nextDue = unpaid.length
+      ? unpaid.sort((a, b) => a.dueDate.localeCompare(b.dueDate))[0].dueDate
+      : null;
+
+    const selectedTotal = bills
+      .filter((b) => selected[b.id])
+      .reduce((s, b) => s + b.amount, 0);
+
+    const allUnpaidIds = unpaid.map((b) => b.id);
+    const allUnpaidSelected =
+      allUnpaidIds.length > 0 &&
+      allUnpaidIds.every((id) => Boolean(selected[id]));
+
+    return {
+      pendingTotal,
+      paidThisMonth,
+      nextDue,
+      selectedTotal,
+      allUnpaidSelected,
+    };
   }, [bills, selected]);
 
   const toggleAllUnpaid = () => {
-    const unpaid = bills.filter(isUnpaid);
     const target = !stats.allUnpaidSelected;
-    setSelected(prev => {
+    const unpaid = bills.filter(isUnpaid);
+
+    setSelected((prev) => {
       const next = { ...prev };
-      unpaid.forEach(b => (next[b.id] = target));
+      unpaid.forEach((b) => (next[b.id] = target));
       return next;
     });
   };
 
-  const toggleOne = (id: string) => setSelected(s => ({ ...s, [id]: !s[id] }));
+  const toggleOne = (id: string) =>
+    setSelected((s) => ({ ...s, [id]: !s[id] }));
 
+  /** ------------------ PAYMENT HANDLER ------------------ **/
   const paySelected = async () => {
-    if (stats.selectedTotal === 0) return;
+    if (stats.selectedTotal <= 0) return;
 
-    const selectedBillIds = Object.keys(selected).filter(id => selected[id]);
+    const billIds = Object.keys(selected).filter((id) => selected[id]);
 
     try {
-      const response = await fetch('/api/resident/payment/order', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ billIds: selectedBillIds }),
+      const res = await fetch("/api/resident/payment/order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ billIds }),
       });
 
-      const data = await response.json();
+      const data = await res.json();
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create payment order');
-      }
+      if (!res.ok) throw new Error(data.error);
 
-      // Open Razorpay checkout
       const options = {
         key: data.key,
         amount: data.amount,
         currency: data.currency,
-        name: 'Society Management',
-        description: 'Bill Payment',
+        name: "Society Management",
+        description: "Bill Payment",
         order_id: data.orderId,
-        handler: async function (response: any) {
-          // Payment successful
+
+        handler: async (resp: Record<string, string>) => {
           try {
-            // Verify payment and update backend
-            const verifyResponse = await fetch('/api/resident/payment/verify', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_signature: response.razorpay_signature,
-                billIds: selectedBillIds,
-              }),
-            });
+            const verifyResp = await fetch(
+              "/api/resident/payment/verify",
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  ...resp,
+                  billIds,
+                }),
+              }
+            );
 
-            const verifyData = await verifyResponse.json();
+            const verifyJson = await verifyResp.json();
 
-            if (verifyResponse.ok && verifyData.success) {
-              // Update UI
-              setBills(prev => prev.map(b => (selected[b.id] ? { ...b, status: "Paid" } : b)));
-              setSelected({});
-              alert("Payment successful ✅");
-            } else {
-              alert("Payment verification failed. Please contact support.");
+            if (!verifyResp.ok || !verifyJson.success) {
+              alert("Payment verification failed.");
+              return;
             }
-          } catch (error) {
-            console.error('Verification error:', error);
-            alert("Payment successful but verification failed. Please refresh the page.");
+
+            setBills((prev) =>
+              prev.map((b) =>
+                billIds.includes(b.id) ? { ...b, status: "Paid" } : b
+              )
+            );
+
+            setSelected({});
+            alert("Payment successful!");
+          } catch {
+            alert("Payment successful but verification failed.");
           }
         },
+
         prefill: {
-          name: 'Resident',
-          email: 'resident@example.com',
-          contact: '9999999999',
+          name: "Resident",
+          email: "resident@example.com",
+          contact: "9999999999",
         },
-        theme: {
-          color: '#3399cc',
-        },
+
+        theme: { color: "#3399cc" },
       };
 
-      const rzp = new (window as any).Razorpay(options) as any;
+      const rzp = new window.Razorpay(options);
       rzp.open();
-    } catch (error) {
-      console.error('Payment error:', error);
-      alert("Payment failed. Please try again.");
+    } catch (err) {
+      console.error(err);
+      alert("Payment failed, try again.");
     }
   };
 
-  if (loading) {
-    return <div className="mt-15 text-center">Loading bills...</div>;
-  }
+  /** ------------------ UI ------------------ **/
 
-  if (error) {
-    return <div className="mt-15 text-center text-red-600">Error: {error}</div>;
-  }
+  if (loading) return <p className="text-center mt-20">Loading bills…</p>;
+  if (error)
+    return (
+      <p className="text-center mt-20 text-red-600 font-semibold">
+        {error}
+      </p>
+    );
 
   return (
     <div className="space-y-6 mt-15">
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      {/* HEADER */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight">Bills &amp; Payments</h1>
-          <p className="text-sm text-gray-600">Manage your society bills and payment history</p>
+          <h1 className="text-3xl font-extrabold">Bills & Payments</h1>
+          <p className="text-gray-600 text-sm">
+            Manage your society bills and payments
+          </p>
         </div>
+
         <button
-          className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white shadow hover:bg-emerald-700"
-          onClick={() => alert("Downloading history (demo)…")}
+          onClick={() => alert("Downloading history…")}
+          className="flex items-center gap-2 px-3 py-2 bg-emerald-600 text-white rounded-lg shadow hover:bg-emerald-700"
         >
           <Download className="h-4 w-4" />
           Download History
         </button>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      {/* STATS CARDS */}
+      <div className="grid md:grid-cols-3 gap-4">
         <StatCard
           title="Pending Bills"
           amount={inr(stats.pendingTotal)}
-          Icon={AlertCircle} // ← updated
-          tone="border-rose-200 bg-rose-50 text-rose-700"
+          Icon={AlertCircle}
+          tone="bg-rose-50 text-rose-700 border-rose-200"
         />
+
         <StatCard
           title="Paid This Month"
-          amount={inr(bills.filter(b => b.status === "Paid").reduce((s, b) => s + b.amount, 0))}
+          amount={inr(stats.paidThisMonth)}
           Icon={CheckCircle2}
-          tone="border-emerald-200 bg-emerald-50 text-emerald-700"
+          tone="bg-emerald-50 text-emerald-700 border-emerald-200"
         />
+
         <StatCard
-          title="Next Due Date"
+          title="Next Due"
           amount={stats.nextDue ? formatFriendly(stats.nextDue) : "No dues"}
           Icon={CalendarCheck2}
-          tone="border-indigo-200 bg-indigo-50 text-indigo-700"
+          tone="bg-indigo-50 text-indigo-700 border-indigo-200"
         />
       </div>
 
-      {/* Quick pay */}
+      {/* QUICK PAY */}
       <div className="rounded-2xl bg-gradient-to-r from-blue-600 to-blue-500 p-5 text-white shadow">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
             <p className="text-lg font-bold">Quick Pay Pending Bills</p>
-            <p className="text-sm/6 opacity-90">Pay all your pending bills in one go</p>
+            <p className="opacity-90 text-sm">
+              Pay all your pending bills in one go
+            </p>
           </div>
+
           <button
-            onClick={paySelected}
             disabled={stats.selectedTotal === 0}
-            className="inline-flex items-center gap-2 rounded-lg bg-white/10 px-4 py-2 text-sm font-semibold ring-1 ring-inset ring-white/30 hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50"
+            onClick={paySelected}
+            className="px-4 py-2 bg-white/10 ring-1 ring-white/30 rounded-lg text-sm font-semibold hover:bg-white/20 disabled:opacity-40"
           >
-            <CreditCard className="h-4 w-4" />
+            <CreditCard className="inline h-4 w-4 mr-2" />
             Pay Selected ({inr(stats.selectedTotal)})
           </button>
         </div>
       </div>
 
-      {/* List */}
-      <section className="rounded-xl border border-gray-200 bg-white shadow-sm">
-        <div className="border-b border-gray-100 p-4">
+      {/* BILL LIST */}
+      <section className="border border-gray-200 rounded-xl shadow bg-white">
+        <div className="p-4 border-b border-gray-100">
           <h2 className="text-xl font-semibold">All Bills</h2>
         </div>
 
-        <div className="flex items-center gap-2 px-4 py-3 text-sm">
+        <div className="flex items-center gap-2 px-4 py-3">
           <input
-            id="sel-all"
             type="checkbox"
-            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600"
             checked={stats.allUnpaidSelected}
             onChange={toggleAllUnpaid}
+            className="h-4 w-4"
           />
-          <label htmlFor="sel-all" className="select-none text-gray-700">
-            Select all unpaid bills
-          </label>
+          <span>Select all unpaid bills</span>
         </div>
 
         <ul className="divide-y divide-gray-100">
-          {bills.map(b => (
+          {bills.map((b) => (
             <li key={b.id} className="p-4">
               <BillRow
                 bill={b}
-                checked={!!selected[b.id]}
-                onToggle={() => toggleOne(b.id)}
+                checked={Boolean(selected[b.id])}
                 disabled={b.status === "Paid"}
+                onToggle={() => toggleOne(b.id)}
               />
             </li>
           ))}
         </ul>
       </section>
 
-      {/* Sticky mobile bar */}
-      <div className="fixed inset-x-0 bottom-0 z-40 bg-white/90 p-3 shadow backdrop-blur md:hidden">
-        <div className="mx-auto flex max-w-3xl items-center justify-between">
-          <span className="text-sm text-gray-700">
-            Selected Total: <span className="font-semibold">{inr(stats.selectedTotal)}</span>
+      {/* MOBILE PAY BAR */}
+      <div className="fixed bottom-0 inset-x-0 bg-white/90 p-3 shadow md:hidden">
+        <div className="flex justify-between max-w-3xl mx-auto">
+          <span>
+            Total:{" "}
+            <span className="font-semibold">
+              {inr(stats.selectedTotal)}
+            </span>
           </span>
+
           <button
-            onClick={paySelected}
             disabled={stats.selectedTotal === 0}
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+            onClick={paySelected}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow disabled:opacity-50"
           >
-            <CreditCard className="h-4 w-4" />
             Pay
           </button>
         </div>
       </div>
-      <div className="h-14 md:hidden" />
     </div>
   );
 }
 
-/* ---------- small components ---------- */
-
+/** Small UI Components */
 function StatCard({
   title,
   amount,
@@ -299,13 +332,16 @@ function StatCard({
   tone: string;
 }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-      <div className="flex items-center justify-between gap-3">
+    <div
+      className={`rounded-xl border border-gray-200 bg-white p-4 shadow-sm`}
+    >
+      <div className="flex justify-between items-center">
         <div>
-          <p className="text-sm text-gray-600">{title}</p>
-          <p className="mt-1 text-2xl font-bold text-gray-900">{amount}</p>
+          <p className="text-gray-600 text-sm">{title}</p>
+          <p className="font-bold text-2xl mt-1">{amount}</p>
         </div>
-        <span className={`rounded-lg p-3 ${tone}`}>
+
+        <span className={`p-3 rounded-lg ${tone}`}>
           <Icon className="h-6 w-6" />
         </span>
       </div>
@@ -332,37 +368,39 @@ function BillRow({
       : "bg-amber-50 text-amber-700";
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-gray-100 p-4 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex items-start gap-3">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-gray-100">
+      <div className="flex gap-3 items-start">
         <input
           type="checkbox"
+          checked={!disabled && checked}
           disabled={disabled}
-          checked={checked && !disabled}
           onChange={onToggle}
-          className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600 disabled:opacity-40"
-          aria-label={`Select ${bill.title}`}
+          className="h-4 w-4 mt-1"
         />
+
         <div>
-          <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-gray-900">{bill.title}</h3>
-            <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${pill}`}>
+          <div className="flex gap-2 items-center">
+            <h3 className="font-semibold">{bill.title}</h3>
+            <span className={`rounded-full px-2.5 py-0.5 text-xs ${pill}`}>
               {bill.status}
             </span>
           </div>
+
           <p className="text-sm text-gray-600">
-            {bill.description} • Due {formatFriendly(bill.dueDate)}
+            {bill.description} — Due {formatFriendly(bill.dueDate)}
           </p>
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-3 sm:flex-col sm:items-end">
-        <div className="text-lg font-semibold text-gray-900">{inr(bill.amount)}</div>
+      <div className="flex sm:flex-col sm:items-end justify-between gap-3">
+        <div className="text-lg font-semibold">{inr(bill.amount)}</div>
+
         {bill.status !== "Paid" ? (
           <button
             onClick={onToggle}
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-50 px-3 py-1.5 text-sm font-semibold text-blue-700 ring-1 ring-inset ring-blue-200 hover:bg-blue-100"
+            className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm ring-1 ring-blue-200 hover:bg-blue-100"
           >
-            <CreditCard className="h-4 w-4" />
+            <CreditCard className="inline h-4 w-4 mr-1" />
             Add to Pay
           </button>
         ) : (
@@ -373,18 +411,15 @@ function BillRow({
   );
 }
 
-/* ---------- utils ---------- */
-
+/** Utils */
 function formatFriendly(iso: string) {
-  try {
-    const d = new Date(iso);
-    return d.toLocaleDateString("en-IN", {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-  } catch {
-    return iso;
-  }
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return iso;
+
+  return d.toLocaleDateString("en-IN", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }

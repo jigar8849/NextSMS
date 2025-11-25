@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import React, { useState, FormEvent } from "react";
 import { Lock, Eye, EyeOff, CheckCircle2, AlertCircle } from "lucide-react";
 
 export default function ChangePasswordPage() {
@@ -16,16 +16,19 @@ export default function ChangePasswordPage() {
   });
   const [submitted, setSubmitted] = useState<"idle" | "ok" | "err">("idle");
 
-  // password rules
   const rules = {
     len: form.next.length >= 8,
     upper: /[A-Z]/.test(form.next),
     lower: /[a-z]/.test(form.next),
     num: /[0-9]/.test(form.next),
     sym: /[^A-Za-z0-9]/.test(form.next),
-    notSameAsCurrent: form.current && form.next && form.current !== form.next,
-    match: form.next && form.confirm && form.next === form.confirm,
+    // ensure boolean types
+    notSameAsCurrent:
+      form.current !== "" && form.next !== "" && form.current !== form.next,
+    match:
+      form.next !== "" && form.confirm !== "" && form.next === form.confirm,
   };
+
   const allGood =
     rules.len &&
     rules.upper &&
@@ -39,7 +42,6 @@ export default function ChangePasswordPage() {
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!allGood) return;
-    // TODO: replace with your server action / API call
     try {
       console.log("Change password payload", form);
       setSubmitted("ok");
@@ -56,7 +58,6 @@ export default function ChangePasswordPage() {
           Change Password
         </h1>
 
-        {/* success / error alert */}
         {submitted !== "idle" && (
           <div
             className={`mb-4 flex items-start gap-2 rounded-lg border px-4 py-3 text-sm ${

@@ -18,7 +18,7 @@ export default function AdminLogin({ error, success }: Props) {
   const [localSuccess, setLocalSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Optional: remember email locally
+  // Auto-fill saved email
   useEffect(() => {
     const saved = localStorage.getItem("admin_email");
     if (saved) {
@@ -42,17 +42,19 @@ export default function AdminLogin({ error, success }: Props) {
     setLoading(true);
 
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+      // 🔥 Direct URL (No ENV needed)
+      const backendUrl = "https://nextsms.onrender.com";
+
       const res = await fetch(`${backendUrl}/admin/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Accept: "application/json", // ask server to return JSON
+          Accept: "application/json",
         },
-        credentials: "include", // keep session cookie
+        credentials: "include", // keep cookie
         body: JSON.stringify({
           email,
-          password, // backend expects 'password'
+          password,
         }),
       });
 
@@ -65,13 +67,14 @@ export default function AdminLogin({ error, success }: Props) {
       }
 
       // Success
-      setLocalSuccess(body?.message || "Logged in");
+      setLocalSuccess(body?.message || "Logged in successfully!");
       setLocalError(null);
 
+      // Remember email
       if (remember) localStorage.setItem("admin_email", email);
       else localStorage.removeItem("admin_email");
 
-      // Go to dashboard (use backend-provided redirect if present)
+      // Redirect to dashboard
       const to = body?.redirect || "/admin/dashboard";
       router.push(to);
     } catch (err: any) {
@@ -85,25 +88,22 @@ export default function AdminLogin({ error, success }: Props) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="w-full max-w-md p-6 md:p-8 rounded-2xl shadow-xl bg-white border border-gray-100 flex flex-col gap-4">
-        {/* Back to Home */}
+        
         <div className="flex items-center">
           <Link href="/" className="flex items-center gap-2 text-blue-700 hover:underline transition font-medium">
             <FaArrowLeft /> Back to Home
           </Link>
         </div>
 
-        {/* Shield Icon */}
         <div className="flex justify-center">
           <span className="rounded-full bg-blue-100 p-4">
             <FaShieldAlt className="text-blue-700 text-3xl" />
           </span>
         </div>
 
-        {/* Title */}
         <h3 className="text-center font-bold text-2xl mt-4">Admin Portal</h3>
         <p className="text-center text-gray-500 mb-2">Sign in to manage your society</p>
 
-        {/* Alerts */}
         {(localError || error) && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded mb-2 text-center text-sm">
             {localError || error}
@@ -115,7 +115,6 @@ export default function AdminLogin({ error, success }: Props) {
           </div>
         )}
 
-        {/* Form */}
         <form className="w-full mt-2" onSubmit={handleSubmit} autoComplete="on">
           <label htmlFor="email" className="block text-gray-700 font-semibold mb-1">
             Email Address
@@ -145,7 +144,6 @@ export default function AdminLogin({ error, success }: Props) {
             onChange={(e) => setPassword(e.target.value)}
           />
 
-          {/* Action Row */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mt-4">
             <label className="inline-flex items-center">
               <input
@@ -170,16 +168,16 @@ export default function AdminLogin({ error, success }: Props) {
           </button>
         </form>
 
-        {/* Footer */}
         <div className="mt-6 text-center text-gray-500 text-sm">
           Need to create a society account?
           <Link href="/createAccount" className="ml-1 text-blue-600 hover:underline font-semibold">
             Register here
           </Link>
         </div>
+
         <div className="text-center mt-2">
-          <p><b>Credential : admin@gmail.com </b><br></br></p>
-        <p><b>Pass : admin1234</b></p>
+          <p><b>Credential : admin@gmail.com</b></p>
+          <p><b>Pass : admin1234</b></p>
         </div>
       </div>
     </div>
