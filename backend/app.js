@@ -1,6 +1,7 @@
 // Load environment variables first
 require('dotenv').config();
 
+
 // Validate environment and load config
 const config = require('./config/env');
 
