@@ -14,50 +14,66 @@ export default function NewComplaintPage() {
     date: "",
     file: null as File | null,
   });
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setMessage(null); // Clear previous message
+    setMessage(null);
+
     try {
-      const response = await fetch('/api/resident/complaints', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include', // Include cookies for session
-        body: JSON.stringify({
-          title: form.title,
-          category: form.category,
-          priority: form.priority,
-          description: form.description,
-          date: form.date,
-          resident: undefined, // Will use session from backend
-        }),
-      });
+      const response = await fetch(
+        "https://nextsms.onrender.com/resident/complaints",
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            title: form.title,
+            category: form.category,
+            priority: form.priority,
+            description: form.description,
+          }),
+        }
+      );
 
       const data = await response.json();
-      if (data.success) {
-        setMessage({ type: 'success', text: 'Complaint submitted successfully!' });
-        // Reset form
+      console.log(data);
+
+      if (response.ok) {
+        setMessage({
+          type: "success",
+          text: "Complaint submitted successfully!",
+        });
+
         setForm({
-          title: '',
-          category: '',
-          priority: '',
-          description: '',
-          date: '',
+          title: "",
+          category: "",
+          priority: "",
+          description: "",
+          date: "",
           file: null,
         });
-        // Redirect to complaints page after 2 seconds
+
         setTimeout(() => {
-          router.push('/resident/complaints');
+          router.push("/resident/complaints");
         }, 2000);
       } else {
-        setMessage({ type: 'error', text: `Error: ${data.message}` });
+        setMessage({
+          type: "error",
+          text: `Error: ${data.error || "Failed to submit complaint"}`,
+        });
       }
     } catch (error) {
-      console.error('Error submitting complaint:', error);
-      setMessage({ type: 'error', text: 'Failed to submit complaint. Please try again.' });
+      console.error("Error submitting complaint:", error);
+      setMessage({
+        type: "error",
+        text: "Failed to submit complaint. Please try again.",
+      });
     }
   };
 

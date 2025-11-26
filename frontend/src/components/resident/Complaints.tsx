@@ -75,7 +75,7 @@ export default function ComplaintsPage() {
       try {
         setLoading(true);
         setError(null);
-        const response = await fetch('/api/resident/complaints', {
+        const response = await fetch('https://nextsms.onrender.com/resident/complaints', {
           method: 'GET',
           credentials: 'include', // Include cookies for session
         });
