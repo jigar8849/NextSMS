@@ -44,27 +44,28 @@ export default function EmployeeManagement() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+   useEffect(() => {
     const fetchEmployees = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        const backendUrl =
-          process.env.NEXT_PUBLIC_BACKEND_URL || "https://nextsms.onrender.com";
-
-        const response = await fetch(`${backendUrl}/admin/employees`, {
-          method: "GET",
-          credentials: "include",
-        });
+        const response = await fetch(
+          "https://nextsms.onrender.com/admin/employees",
+          {
+            method: "GET",
+            credentials: "include", // ✔ Send cookies (required)
+          }
+        );
 
         if (!response.ok) {
+          const text = await response.text();
+          console.error("Fetch error:", text);
           throw new Error("Failed to fetch employees");
         }
 
-        const data: EmployeeResponse = await response.json();
-        setEmployees(data.employees);
-        setStats(data.stats);
+        const data = await response.json();
+        setEmployees(data.employees || []);
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
