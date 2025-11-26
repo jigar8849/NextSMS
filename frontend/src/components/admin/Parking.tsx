@@ -46,14 +46,17 @@ export default function ParkingManagement() {
   useEffect(() => {
     const fetchParkingData = async () => {
       try {
-        const response = await fetch('/admin/parking');
+        const response = await fetch("/admin/parking", {
+          method: "GET",
+          credentials: "include",
+        });
         if (!response.ok) {
-          throw new Error('Failed to fetch parking data');
+          throw new Error("Failed to fetch parking data");
         }
         const data = await response.json();
         setParkingData(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
+        setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
         setLoading(false);
       }
@@ -106,12 +109,20 @@ export default function ParkingManagement() {
     );
   }
 
-  const { totalTwoWheelerSlots, totalFourWheelerSlots, occupiedTwoWheeler, occupiedFourWheeler, residents } = parkingData;
+  const {
+    totalTwoWheelerSlots,
+    totalFourWheelerSlots,
+    occupiedTwoWheeler,
+    occupiedFourWheeler,
+    residents,
+  } = parkingData;
 
   // derived values
   const available4 = Math.max(0, totalFourWheelerSlots - occupiedFourWheeler);
   const occRate = Math.round(
-    ((occupiedTwoWheeler + occupiedFourWheeler) / (totalTwoWheelerSlots + totalFourWheelerSlots)) * 100
+    ((occupiedTwoWheeler + occupiedFourWheeler) /
+      (totalTwoWheelerSlots + totalFourWheelerSlots)) *
+      100
   );
 
   return (
@@ -126,7 +137,10 @@ export default function ParkingManagement() {
         <div className="bg-white p-4 rounded-lg shadow flex justify-between items-center">
           <div>
             <p className="text-gray-500">Two Wheeler Slots</p>
-            <h2 className="text-xl font-bold"> {occupiedTwoWheeler}/{totalTwoWheelerSlots}</h2>
+            <h2 className="text-xl font-bold">
+              {" "}
+              {occupiedTwoWheeler}/{totalTwoWheelerSlots}
+            </h2>
           </div>
           <Bike className="h-10 w-10 text-blue-600" />
         </div>
@@ -134,7 +148,9 @@ export default function ParkingManagement() {
         <div className="bg-white p-4 rounded-lg shadow flex justify-between items-center">
           <div>
             <p className="text-gray-500">Four Wheeler Slots</p>
-            <h2 className="text-xl font-bold">{occupiedFourWheeler}/{totalFourWheelerSlots}</h2>
+            <h2 className="text-xl font-bold">
+              {occupiedFourWheeler}/{totalFourWheelerSlots}
+            </h2>
           </div>
           <Car className="h-10 w-10 text-emerald-600" />
         </div>
@@ -173,7 +189,9 @@ export default function ParkingManagement() {
           className="border px-3 py-2 rounded-md bg-white"
           value={vehicleFilter}
           onChange={(e) =>
-            setVehicleFilter(e.target.value as "all" | "2-wheeler" | "4-wheeler")
+            setVehicleFilter(
+              e.target.value as "all" | "2-wheeler" | "4-wheeler"
+            )
           }
         >
           <option value="all">All Vehicles</option>
