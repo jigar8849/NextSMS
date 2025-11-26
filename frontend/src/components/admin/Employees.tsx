@@ -46,36 +46,31 @@ export default function EmployeeManagement() {
 
   useEffect(() => {
     const fetchEmployees = async () => {
-  try {
-    setLoading(true);
-    setError(null);
+      try {
+        setLoading(true);
+        setError(null);
 
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://nextsms-backend.onrender.com";
-    const token = localStorage.getItem("token");
+        const backendUrl =
+          process.env.NEXT_PUBLIC_BACKEND_URL || "https://nextsms.onrender.com";
 
-    const response = await fetch(`${backendUrl}/admin/employees`, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` }),
-      },
-    });
+        const response = await fetch(`${backendUrl}/admin/employees`, {
+          method: "GET",
+          credentials: "include",
+        });
 
-    if (!response.ok) {
-      throw new Error("Failed to fetch employees");
-    }
+        if (!response.ok) {
+          throw new Error("Failed to fetch employees");
+        }
 
-    const data: EmployeeResponse = await response.json();
-    setEmployees(data.employees);
-    setStats(data.stats);
-  } catch (err) {
-    setError(err instanceof Error ? err.message : "An error occurred");
-  } finally {
-    setLoading(false);
-  }
-};
-
+        const data: EmployeeResponse = await response.json();
+        setEmployees(data.employees);
+        setStats(data.stats);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An error occurred");
+      } finally {
+        setLoading(false);
+      }
+    };
 
     fetchEmployees();
   }, []);
@@ -171,7 +166,7 @@ export default function EmployeeManagement() {
         </div>
       </div>
 
-      {/* Search + Role filter */}
+      {/* Search + Filter */}
       <div className="mt-6 flex flex-col sm:flex-row gap-4">
         <div className="flex items-center border rounded-md px-3 py-2 flex-1 bg-white">
           <Search className="h-5 w-5 text-gray-500 mr-2" />
@@ -205,7 +200,7 @@ export default function EmployeeManagement() {
           <thead>
             <tr className="bg-gray-100 text-left">
               <th className="p-3 font-semibold">Employee</th>
-              <th className="p-3 font-semibold">Role &amp; Shift</th>
+              <th className="p-3 font-semibold">Role & Shift</th>
               <th className="p-3 font-semibold">Contact</th>
               <th className="p-3 font-semibold">Salary</th>
               <th className="p-3 font-semibold">Join Date</th>
@@ -213,6 +208,7 @@ export default function EmployeeManagement() {
               <th className="p-3 font-semibold">Actions</th>
             </tr>
           </thead>
+
           <tbody>
             {rows.map((e) => (
               <tr key={e._id} className="border-t hover:bg-gray-50">
@@ -225,7 +221,10 @@ export default function EmployeeManagement() {
                 </td>
                 <td className="p-3">{e.contact}</td>
                 <td className="p-3">{money(e.salary)}</td>
-                <td className="p-3">{new Date(e.join_date).toLocaleDateString()}</td>
+                <td className="p-3">
+                  {new Date(e.join_date).toLocaleDateString()}
+                </td>
+
                 <td className="p-3">
                   <span
                     className={`px-2 py-1 rounded-md text-sm font-medium ${
@@ -237,6 +236,7 @@ export default function EmployeeManagement() {
                     {e.status}
                   </span>
                 </td>
+
                 <td className="p-3">
                   <Link
                     href={`/admin/forms/manageEmp?id=${e._id}`}
@@ -247,6 +247,7 @@ export default function EmployeeManagement() {
                 </td>
               </tr>
             ))}
+
             {rows.length === 0 && (
               <tr>
                 <td colSpan={7} className="p-6 text-center text-gray-500">
