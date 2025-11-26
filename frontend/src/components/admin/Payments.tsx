@@ -39,39 +39,46 @@ export default function PaymentManagement() {
   }, []);
 
   const fetchPayments = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('/api/admin/payments');
-      if (!response.ok) {
-        throw new Error('Failed to fetch payments');
-      }
-      const data = await response.json();
-      setPayments(data);
+  try {
+    setLoading(true);
 
-      // Calculate stats
-      const totalCollected = data
-        .filter((p: Payment) => p.isPaid)
-        .reduce((sum: number, p: Payment) => sum + p.currentAmount, 0);
+    const response = await fetch('https://nextsms.onrender.com/api/admin/payments', {
+      method: 'GET',
+      credentials: 'include', // 🔥 This sends cookies to backend
+    });
 
-      const pendingAmount = data
-        .filter((p: Payment) => !p.isPaid)
-        .reduce((sum: number, p: Payment) => sum + p.currentAmount, 0);
-
-      const totalPayments = data.length;
-      const paidPayments = data.filter((p: Payment) => p.isPaid).length;
-      const collectionRate = totalPayments > 0 ? Math.round((paidPayments / totalPayments) * 100) : 0;
-
-      setStats({
-        totalCollected,
-        pendingAmount,
-        collectionRate,
-      });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setLoading(false);
+    if (!response.ok) {
+      throw new Error('Failed to fetch payments');
     }
-  };
+
+    const data = await response.json();
+    setPayments(data);
+
+    // Calculate stats
+    const totalCollected = data
+      .filter((p: Payment) => p.isPaid)
+      .reduce((sum: number, p: Payment) => sum + p.currentAmount, 0);
+
+    const pendingAmount = data
+      .filter((p: Payment) => !p.isPaid)
+      .reduce((sum: number, p: Payment) => sum + p.currentAmount, 0);
+
+    const totalPayments = data.length;
+    const paidPayments = data.filter((p: Payment) => p.isPaid).length;
+    const collectionRate = totalPayments > 0 ? Math.round((paidPayments / totalPayments) * 100) : 0;
+
+    setStats({
+      totalCollected,
+      pendingAmount,
+      collectionRate,
+    });
+  } catch (err) {
+    setError(err instanceof Error ? err.message : 'An error occurred');
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const filteredPayments = payments.filter((payment) =>
     payment.residentName.toLowerCase().includes(search.toLowerCase()) ||
@@ -80,17 +87,25 @@ export default function PaymentManagement() {
   );
 
   const handleMarkAsPaid = async (id: string) => {
-    try {
-      const response = await fetch(`/api/admin/payments/${id}`, {
-        method: 'PUT',
-      });
-      if (response.ok) {
-        fetchPayments(); // Refresh data
-      }
-    } catch (err) {
-      console.error('Error marking as paid:', err);
+  try {
+    const response = await fetch(`https://nextsms.onrender.com/api/admin/payments/${id}`, {
+      method: 'PUT',
+      credentials: 'include', // 🔥 Send cookies/session token
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to update payment status');
     }
-  };
+
+    fetchPayments(); // Refresh data
+  } catch (err) {
+    console.error('Error marking as paid:', err);
+  }
+};
+
 
   return (
     <div className="p-6 mt-15">
