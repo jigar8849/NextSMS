@@ -34,7 +34,7 @@ export default function Billing() {
   useEffect(() => {
     const fetchBills = async () => {
       try {
-        const response = await fetch("/api/resident/bills");
+        const response = await fetch("https://nextsms.onrender.com/resident/bills");
         const data = await response.json();
 
         if (!response.ok || !data.success) {
