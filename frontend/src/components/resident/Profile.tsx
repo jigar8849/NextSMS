@@ -34,7 +34,7 @@ const INITIAL_PROFILE: Profile = {
   lastName: "Prajapati",
   email: "jigar@gmail.com",
   phone: "8849602896",
-  emergency: "7383390261",
+  emergency: "0-0-0-0-0-",
   dob: "2025-06-30",
   flat: "Home D-11",
   role: "Owner",

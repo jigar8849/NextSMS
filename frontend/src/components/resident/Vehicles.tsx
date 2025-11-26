@@ -49,24 +49,33 @@ export default function VehicleSearchPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchParkingData = async () => {
-      try {
-        const response = await fetch('/api/resident/parking');
-        if (!response.ok) {
-          throw new Error('Failed to fetch parking data');
+useEffect(() => {
+  const fetchParkingData = async () => {
+    try {
+      const response = await fetch(
+        'https://nextsms.onrender.com/resident/parking',
+        {
+          method: 'GET',
+          credentials: 'include', // ✅ include cookies for authentication
         }
-        const data = await response.json();
-        setParkingData(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-      } finally {
-        setLoading(false);
-      }
-    };
+      );
 
-    fetchParkingData();
-  }, []);
+      if (!response.ok) {
+        throw new Error('Failed to fetch parking data');
+      }
+
+      const data = await response.json();
+      setParkingData(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchParkingData();
+}, []);
+
 
   // Flat counts for stat cards
   const stats = useMemo(() => {
