@@ -88,7 +88,7 @@ export default function PaymentManagement() {
 
   const handleMarkAsPaid = async (id: string) => {
   try {
-    const response = await fetch(`https://nextsms.onrender.com/api/admin/payments/${id}`, {
+    const response = await fetch(`https://nextsms.onrender.com/admin/payments/${id}`, {
       method: 'PUT',
       credentials: 'include', // 🔥 Send cookies/session token
       headers: {
