@@ -129,11 +129,15 @@ export default function Billing() {
     const billIds = Object.keys(selected).filter((id) => selected[id]);
 
     try {
-      const res = await fetch("/api/resident/payment/order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ billIds }),
-      });
+      const res = await fetch(
+        "https://nextsms.onrender.com/resident/payment/order",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include", // <--- important
+          body: JSON.stringify({ billIds }),
+        }
+      );
 
       const data = await res.json();
 
@@ -149,14 +153,18 @@ export default function Billing() {
 
         handler: async (resp: Record<string, string>) => {
           try {
-            const verifyResp = await fetch("/api/resident/payment/verify", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                ...resp,
-                billIds,
-              }),
-            });
+            const verifyResp = await fetch(
+              "https://nextsms.onrender.com/resident/payment/verify",
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include", // <--- Important!
+                body: JSON.stringify({
+                  ...resp,
+                  billIds,
+                }),
+              }
+            );
 
             const verifyJson = await verifyResp.json();
 
