@@ -37,7 +37,7 @@ export default function ResidentLogin({ error, success }: Props) {
     try {
       const backendUrl = "https://nextsms.onrender.com";
 
-      const res = await fetch(`${backendUrl}/resident/login`, {
+      const res = await fetch(`${backendUrl}/resident/resident-login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
