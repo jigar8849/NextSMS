@@ -42,7 +42,7 @@ export default function PaymentManagement() {
   try {
     setLoading(true);
 
-    const response = await fetch('https://nextsms.onrender.com/api/admin/payments', {
+    const response = await fetch('https://nextsms.onrender.com/admin/payments', {
       method: 'GET',
       credentials: 'include', // 🔥 This sends cookies to backend
     });
