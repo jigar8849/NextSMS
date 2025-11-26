@@ -49,7 +49,7 @@ export default function ComplaintsManagement() {
     const fetchComplaints = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:5000/admin/complaints', {
+        const response = await fetch('https://nextsms.onrender.com/admin/complaints', {
           method: 'GET',
           headers: {
             'Accept': 'application/json',
