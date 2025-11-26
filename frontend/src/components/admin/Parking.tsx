@@ -46,7 +46,7 @@ export default function ParkingManagement() {
   useEffect(() => {
     const fetchParkingData = async () => {
       try {
-        const response = await fetch('/api/admin/parking');
+        const response = await fetch('/admin/parking');
         if (!response.ok) {
           throw new Error('Failed to fetch parking data');
         }
