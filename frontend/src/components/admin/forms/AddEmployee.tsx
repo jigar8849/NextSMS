@@ -15,8 +15,8 @@ type EmployeeStatus = 'Active' | 'Inactive';
 export default function AddEmployeeForm() {
   const router = useRouter();
 
-  const API_BASE = '';
-  const API_PATH = '/api/admin/addNewEmployee';
+  const API_BASE = 'https://nextsms.onrender.com'; // <-- Backend URL
+  const API_PATH = '/admin/addNewEmployee';
 
   const [name, setName] = useState('');
   const [role, setRole] = useState<EmployeeRole | ''>('');
@@ -35,7 +35,7 @@ export default function AddEmployeeForm() {
     return Number.isFinite(n) ? n : null;
   }
 
-function validate(): string | null {
+  function validate(): string | null {
     if (!name.trim()) return 'Please enter employee name.';
     if (!role) return 'Please select a role.';
     if (!contact.trim()) return 'Please enter contact number.';
@@ -67,12 +67,11 @@ function validate(): string | null {
       role,
       contact: toNumber(contact),
       salary: toNumber(salary),
-      join_date: joinDate, // map to schema field
+      join_date: joinDate,
       location: location.trim(),
       status,
     };
 
-    // Final safety check for numeric fields
     if (payload.contact === null) {
       setLocalError('Please enter a valid contact number.');
       setLoading(false);
@@ -84,34 +83,31 @@ function validate(): string | null {
       return;
     }
 
-   try {
-  const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(`${API_BASE}${API_PATH}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        credentials: 'include', // <-- VERY IMPORTANT
+        body: JSON.stringify(payload),
+      });
 
-  const res = await fetch(`https://nextsms.onrender.com/admin/addNewEmployee`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      Authorization: `Bearer ${token}`, // 🔥 TOKEN ADDED HERE
-    },
-    body: JSON.stringify(payload),
-  });
+      const body = await res.json().catch(() => null);
 
-  const body = await res.json().catch(() => null);
+      if (!res.ok) {
+        setLocalError(body?.error || `Request failed (${res.status})`);
+        return;
+      }
 
-  if (!res.ok) {
-    setLocalError(body?.error || `Request failed (${res.status})`);
-    return;
-  }
-
-  setLocalSuccess(body?.message || "Employee added successfully");
-  router.push("/admin/employees");
-} catch (err) {
-  setLocalError(err instanceof Error ? err.message : "Network error");
-} finally {
-  setLoading(false);
-}
-
+      setLocalSuccess(body?.message || 'Employee added successfully');
+      router.push('/admin/employees');
+    } catch (err) {
+      setLocalError(err instanceof Error ? err.message : 'Network error');
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
