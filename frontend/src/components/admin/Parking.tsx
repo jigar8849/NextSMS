@@ -43,27 +43,32 @@ export default function ParkingManagement() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchParkingData = async () => {
-      try {
-        const response = await fetch("/admin/parking", {
-          method: "GET",
-          credentials: "include",
-        });
-        if (!response.ok) {
-          throw new Error("Failed to fetch parking data");
-        }
-        const data = await response.json();
-        setParkingData(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "An error occurred");
-      } finally {
-        setLoading(false);
-      }
-    };
+ useEffect(() => {
+  const fetchParkingData = async () => {
+    try {
+      const response = await fetch('https://nextsms.onrender.com/admin/parking', {
+        method: 'GET',
+        credentials: 'include'  // ✅ send cookies
+      });
 
-    fetchParkingData();
-  }, []);
+      if (!response.ok) {
+        const text = await response.text();
+        console.error('Fetch error response:', text);
+        throw new Error('Failed to fetch parking data');
+      }
+
+      const data = await response.json();
+      setParkingData(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchParkingData();
+}, []);
+
 
   // filtering - always call useMemo in the same order
   const results = useMemo(() => {
