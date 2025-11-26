@@ -34,7 +34,14 @@ export default function Billing() {
   useEffect(() => {
     const fetchBills = async () => {
       try {
-        const response = await fetch("https://nextsms.onrender.com/resident/bills");
+        const response = await fetch(
+          "https://nextsms.onrender.com/resident/bills",
+          {
+            method: "GET",
+            credentials: "include", // very important
+          }
+        );
+
         const data = await response.json();
 
         if (!response.ok || !data.success) {
@@ -142,17 +149,14 @@ export default function Billing() {
 
         handler: async (resp: Record<string, string>) => {
           try {
-            const verifyResp = await fetch(
-              "/api/resident/payment/verify",
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  ...resp,
-                  billIds,
-                }),
-              }
-            );
+            const verifyResp = await fetch("/api/resident/payment/verify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                ...resp,
+                billIds,
+              }),
+            });
 
             const verifyJson = await verifyResp.json();
 
@@ -196,9 +200,7 @@ export default function Billing() {
   if (loading) return <p className="text-center mt-20">Loading bills…</p>;
   if (error)
     return (
-      <p className="text-center mt-20 text-red-600 font-semibold">
-        {error}
-      </p>
+      <p className="text-center mt-20 text-red-600 font-semibold">{error}</p>
     );
 
   return (
@@ -301,9 +303,7 @@ export default function Billing() {
         <div className="flex justify-between max-w-3xl mx-auto">
           <span>
             Total:{" "}
-            <span className="font-semibold">
-              {inr(stats.selectedTotal)}
-            </span>
+            <span className="font-semibold">{inr(stats.selectedTotal)}</span>
           </span>
 
           <button
@@ -332,9 +332,7 @@ function StatCard({
   tone: string;
 }) {
   return (
-    <div
-      className={`rounded-xl border border-gray-200 bg-white p-4 shadow-sm`}
-    >
+    <div className={`rounded-xl border border-gray-200 bg-white p-4 shadow-sm`}>
       <div className="flex justify-between items-center">
         <div>
           <p className="text-gray-600 text-sm">{title}</p>
