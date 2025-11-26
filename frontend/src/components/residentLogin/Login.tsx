@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import React, { useState } from "react";
 import { FaArrowLeft, FaUser } from "react-icons/fa";
@@ -15,59 +15,55 @@ export default function ResidentLogin({ error, success }: Props) {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [localError, setLocalError] = useState<string | null>(null);
-  const [localSuccess, setLocalSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const [localError, setLocalError] = useState<string | null>(null);
+  const [localSuccess, setLocalSuccess] = useState<string | null>(null);
+
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  if (loading) return;
+    e.preventDefault();
+    if (loading) return;
 
-  if (!email || !password) {
-    setLocalError("Please enter both email and password.");
-    setLocalSuccess(null);
-    return;
-  }
-
-  setLocalError(null);
-  setLocalSuccess(null);
-  setLoading(true);
-
-  try {
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-
-    const res = await fetch(`${backendUrl}/admin/login`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      credentials: "include",
-      body: JSON.stringify({ email, password }),
-    });
-
-    const data = await res.json().catch(() => null);
-
-    if (!res.ok) {
-      setLocalError(data?.error || "Login failed.");
+    if (!email || !password) {
+      setLocalError("Please enter both email and password.");
+      setLocalSuccess(null);
       return;
     }
 
-    // ⭐ SAVE TOKEN
-    if (data.token) {
-      localStorage.setItem("residentToken", data.token);
+    setLocalError(null);
+    setLocalSuccess(null);
+    setLoading(true);
+
+    try {
+      const backendUrl = "https://nextsms.onrender.com";
+
+      const res = await fetch(`${backendUrl}/resident/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        credentials: "include", // SESSION COOKIE 👌
+        body: JSON.stringify({ email, password }),
+      });
+
+      const body = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        setLocalError(body?.message || "Login failed");
+        return;
+      }
+
+      setLocalSuccess(body?.message || "Resident logged in!");
+      setLocalError(null);
+
+      router.push("/resident/dashboard"); // redirect
+    } catch (err: any) {
+      setLocalError("Network error");
+    } finally {
+      setLoading(false);
     }
-
-    setLocalSuccess(data?.message || "Logged in");
-
-    router.push(data?.redirect || "/resident/dashboard");
-    
-  } catch (err: any) {
-    setLocalError("Network error");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
 
   return (
