@@ -42,6 +42,7 @@ export default function ResidentLogin({ error, success }: Props) {
         "Content-Type": "application/json",
         Accept: "application/json",
       },
+      credentials: "include",
       body: JSON.stringify({ email, password }),
     });
 

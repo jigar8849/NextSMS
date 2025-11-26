@@ -1,7 +1,6 @@
 // Load environment variables first
 require('dotenv').config();
 
-
 // Validate environment and load config
 const config = require('./config/env');
 
@@ -26,6 +25,9 @@ const residentRoutes = require('./routes/resident');
 
 const app = express();
 
+// REQUIRED for Render reverse proxy
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet({
   contentSecurityPolicy: config.isProduction
@@ -34,15 +36,15 @@ app.use(compression());
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  windowMs: 15 * 60 * 1000,
+  max: 100,
   message: 'Too many requests from this IP, please try again later.'
 });
 app.use(limiter);
 
-// CORS configuration
+// CORS configuration — must match deployed frontend URL
 app.use(cors({
-  origin: config.frontendUrl,
+  origin: "https://nextsms-1.onrender.com",
   credentials: true
 }));
 
@@ -53,16 +55,16 @@ app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 // Request logging middleware
 app.use(requestLogger);
 
-// Session configuration
+// Session configuration — required for cross-domain cookie
 app.use(session({
   secret: config.sessionSecret,
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: config.isProduction, // Use secure cookies in production
+    secure: config.isProduction, // true in HTTPS
     httpOnly: true,
-    sameSite: config.isProduction ? 'strict' : 'lax',
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    sameSite: "none", // Required for different domain
+    maxAge: 24 * 60 * 60 * 1000
   }
 }));
 
@@ -73,6 +75,7 @@ const SocitySetUp = require('./models/socitySetUp');
 const NewMember = require('./models/newMember');
 passport.use(PASSPORT_STRATEGIES.SOCIETY, new LocalStrategy({ usernameField: 'email' }, SocitySetUp.authenticate()));
 passport.use(PASSPORT_STRATEGIES.RESIDENT, new LocalStrategy({ usernameField: 'email' }, NewMember.authenticate()));
+
 passport.serializeUser((user, done) => {
   done(null, { id: user._id, type: user.constructor.modelName });
 });
@@ -101,20 +104,20 @@ app.use('/resident', residentRoutes);
 // Health check
 app.get('/health', (req, res) => {
   res.status(200).json({ 
-    status: 'OK', 
+    status: 'OK',
     message: 'Server is running',
     environment: config.nodeEnv,
     timestamp: new Date().toISOString()
   });
 });
 
-// 404 handler (must be after all routes)
+// 404 handler
 app.use(notFoundHandler);
 
-// Error handling middleware (must be last)
+// Error handling middleware
 app.use(errorHandler);
 
-// Connect to MongoDB
+// MongoDB Connection
 mongoose.connect(config.mongoUri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -124,7 +127,7 @@ mongoose.connect(config.mongoUri, {
   console.log(`✓ Environment: ${config.nodeEnv}`);
   app.listen(config.port, () => {
     console.log(`✓ Server running on port ${config.port}`);
-    console.log(`✓ Frontend URL: ${config.frontendUrl}`);
+    console.log(`✓ Frontend URL: https://nextsms-1.onrender.com`);
   });
 })
 .catch((err) => {
