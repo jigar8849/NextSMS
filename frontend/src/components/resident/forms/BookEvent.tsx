@@ -30,7 +30,7 @@ export default function NewEventPage() {
     setMessage(null);
 
     try {
-      const response = await fetch('/api/resident/events', {
+      const response = await fetch('https://nextsms.onrender.com/resident/events', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
