@@ -84,29 +84,34 @@ function validate(): string | null {
       return;
     }
 
-    try {
-      const res = await fetch(`${API_BASE}${API_PATH}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(payload),
-      });
+   try {
+  const token = localStorage.getItem("token");
 
-      const body = await res.json().catch(() => null);
+  const res = await fetch(`https://nextsms.onrender.com/admin/addNewEmployee`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`, // 🔥 TOKEN ADDED HERE
+    },
+    body: JSON.stringify(payload),
+  });
 
-      if (!res.ok) {
-        setLocalError(body?.error || `Request failed (${res.status})`);
-        return;
-      }
+  const body = await res.json().catch(() => null);
 
-      setLocalSuccess(body?.message || 'Employee added successfully');
-      // Redirect after success
-      router.push('/admin/employees');
-    } catch (err) {
-      setLocalError(err instanceof Error ? err.message : 'Network error');
-    } finally {
-      setLoading(false);
-    }
+  if (!res.ok) {
+    setLocalError(body?.error || `Request failed (${res.status})`);
+    return;
+  }
+
+  setLocalSuccess(body?.message || "Employee added successfully");
+  router.push("/admin/employees");
+} catch (err) {
+  setLocalError(err instanceof Error ? err.message : "Network error");
+} finally {
+  setLoading(false);
+}
+
   }
 
   return (
