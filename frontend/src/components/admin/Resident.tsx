@@ -50,26 +50,33 @@ export default function ResidentsPage() {
     setShowDeleteModal(true);
   };
 
-  const confirmDelete = async () => {
-    if (!residentToDelete) return;
+ const confirmDelete = async () => {
+  if (!residentToDelete) return;
 
-    try {
-      const response = await fetch(`/api/admin/residents/${residentToDelete.id}`, {
+  try {
+    const response = await fetch(
+      `https://nextsms.onrender.com/admin/residents/${residentToDelete.id}`,
+      {
         method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete resident');
+        credentials: 'include', // REQUIRED for backend auth cookies
       }
+    );
 
-      // Refresh the residents list
-      await fetchResidents();
-      setShowDeleteModal(false);
-      setResidentToDelete(null);
-    } catch (err) {
-      alert('Failed to delete resident: ' + (err instanceof Error ? err.message : 'Unknown error'));
+    if (!response.ok) {
+      throw new Error('Failed to delete resident');
     }
-  };
+
+    await fetchResidents();
+    setShowDeleteModal(false);
+    setResidentToDelete(null);
+  } catch (err) {
+    alert(
+      'Failed to delete resident: ' +
+        (err instanceof Error ? err.message : 'Unknown error')
+    );
+  }
+};
+
 
   const cancelDelete = () => {
     setShowDeleteModal(false);
