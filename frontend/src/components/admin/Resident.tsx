@@ -151,36 +151,70 @@ export default function ResidentsPage() {
               <th className="px-4 py-3">Actions</th>
             </tr>
           </thead>
-          <tbody>
-            {residents.map((r) => (
-              <tr
-                key={r._id}
-                className="border-t hover:bg-gray-50 transition-colors"
-              >
-                <td className="px-4 py-3">
-                  <span className="font-semibold">{r.name}</span>
-                  <div className="text-sm text-gray-500">ID: {r._id}</div>
-                </td>
-                ...
-                <td className="px-4 py-3 flex gap-3 text-lg">
-                  <button className="text-blue-600 hover:text-blue-800">
-                    <FaEye />
-                  </button>
-                  <Link href={`/admin/residents/${r._id}/edit`}>
-                    <button className="text-yellow-600 hover:text-yellow-800">
-                      <FaEdit />
-                    </button>
-                  </Link>
-                  <button
-                    className="text-red-600 hover:text-red-800"
-                    onClick={() => handleDelete(r)}
-                  >
-                    <FaTrash />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
+         <tbody>
+  {residents.map((r) => (
+    <tr
+      key={r._id}
+      className="border-t hover:bg-gray-50 transition-colors"
+    >
+      {/* Resident */}
+      <td className="px-4 py-3">
+        <span className="font-semibold">{r.name}</span>
+        <div className="text-sm text-gray-500">ID: {r._id}</div>
+      </td>
+
+      {/* Flat Details */}
+      <td className="px-4 py-3">
+        Block: {r.flat.split(" - ")[0]} <br />
+        Flat No: {r.flat.split(" - ")[1]}
+      </td>
+
+      {/* Contact */}
+      <td className="px-4 py-3">
+        Email: {r.email} <br />
+        Phone: {r.phone}
+      </td>
+
+      {/* Family & Vehicles */}
+      <td className="px-4 py-3">
+        Members: {r.members} <br />
+        Vehicles: {r.vehicles}
+      </td>
+
+      {/* Status */}
+      <td className="px-4 py-3">
+        <span
+          className={`px-2 py-1 text-xs font-semibold rounded-full ${
+            r.status === "active"
+              ? "bg-green-100 text-green-700"
+              : "bg-red-100 text-red-700"
+          }`}
+        >
+          {r.status}
+        </span>
+      </td>
+
+      {/* Actions */}
+      <td className="px-4 py-3 flex gap-3 text-lg">
+        <button className="text-blue-600 hover:text-blue-800">
+          <FaEye />
+        </button>
+        <Link href={`/admin/residents/${r._id}/edit`}>
+          <button className="text-yellow-600 hover:text-yellow-800">
+            <FaEdit />
+          </button>
+        </Link>
+        <button
+          className="text-red-600 hover:text-red-800"
+          onClick={() => handleDelete(r)}
+        >
+          <FaTrash />
+        </button>
+      </td>
+    </tr>
+  ))}
+</tbody>
+
         </table>
 
         {/* Mobile View (Card Style) */}
