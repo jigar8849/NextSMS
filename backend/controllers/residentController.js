@@ -776,6 +776,62 @@ const deleteFamilyMember = async (req, res) => {
   }
 };
 
+
+// Change password for logged-in resident
+const changePassword = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Unauthorized. Please log in.' });
+    }
+
+    const { currentPassword, newPassword, confirmPassword } = req.body;
+
+    // Validation
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      return res.status(400).json({ error: 'All password fields are required' });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ error: 'New password and confirm password do not match' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'New password must be at least 6 characters long' });
+    }
+
+    // Find resident
+    const resident = await NewMember.findById(req.user._id);
+    if (!resident) {
+      return res.status(404).json({ error: 'Resident not found' });
+    }
+
+    // Verify current password
+    const isCurrentPasswordValid = await resident.authenticate(currentPassword);
+    if (!isCurrentPasswordValid) {
+      return res.status(400).json({ error: 'Current password is incorrect' });
+    }
+
+    // Check if new password is same as current
+    const isSamePassword = await resident.authenticate(newPassword);
+    if (isSamePassword) {
+      return res.status(400).json({ error: 'New password cannot be the same as current password' });
+    }
+
+    // Change password using passport-local-mongoose method
+    await resident.setPassword(newPassword);
+    await resident.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Password changed successfully'
+    });
+
+  } catch (error) {
+    console.error('Error changing password:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 module.exports = {
   addComplaint,
   getComplaints,
@@ -794,4 +850,6 @@ module.exports = {
   addVehicle,
   updateVehicle,
   deleteFamilyMember,
+  changePassword,
+
 };

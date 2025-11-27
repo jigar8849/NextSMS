@@ -52,5 +52,10 @@ router.delete('/family/:index', authenticateResident, deleteFamilyMember);
 router.post('/vehicles', authenticateResident, addVehicle);
 router.put('/vehicles/:id', authenticateResident, updateVehicle);
 
+
+
+// Add this route to your existing resident routes
+router.put('/change-password', authenticateResident, changePassword);
+
 module.exports = router;
 
