@@ -355,12 +355,10 @@ const getBills = async (req, res) => {
       return res.status(401).json({ error: 'Unauthorized. Please log in as resident.' });
     }
 
-    // Fetch bills for the logged-in resident, populate billTemplate
     const bills = await ResidentBill.find({ resident: req.user._id })
-      .populate('billTemplate')
+      .populate('billTemplate') // might be null for some bills
       .sort({ createdAt: -1 });
 
-    // Map to frontend expected format
     const mappedBills = bills.map(bill => {
       const template = bill.billTemplate;
       let status = 'Unpaid';
@@ -368,18 +366,18 @@ const getBills = async (req, res) => {
         status = 'Paid';
       } else {
         const now = new Date();
-        if (new Date(bill.dueDate) < now) {
+        if (bill.dueDate && new Date(bill.dueDate) < now) {
           status = 'Overdue';
         }
       }
 
       return {
         id: bill._id.toString(),
-        title: template.title,
-        description: template.type, // Use type as description
-        dueDate: bill.dueDate.toISOString(),
-        amount: bill.amount,
-        status: status,
+        title: template?.title || "Untitled Bill",
+        description: template?.type || "No description",
+        dueDate: bill.dueDate ? bill.dueDate.toISOString() : "",
+        amount: bill.amount || 0,
+        status,
       };
     });
 
@@ -393,6 +391,8 @@ const getBills = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+
 
 // Create Razorpay order for payment
 const createPaymentOrder = async (req, res) => {
