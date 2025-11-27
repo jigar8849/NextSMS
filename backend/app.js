@@ -44,9 +44,13 @@ app.use(limiter);
 
 // CORS configuration — must match deployed frontend URL
 app.use(cors({
-  origin: "https://nextsms-1.onrender.com",
+  origin: [
+    "https://nextsms-1.onrender.com",
+    "https://nextsms.onrender.com"
+  ],
   credentials: true
 }));
+
 
 // Body parsing middleware
 app.use(express.json({ limit: '1mb' }));

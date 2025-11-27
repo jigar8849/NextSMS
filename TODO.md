@@ -211,4 +211,22 @@ export default function NewComplaintPage() {
       </div>
     </main>
   );
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  app.use(cors({
+  origin: "https://nextsms-1.onrender.com",
+  credentials: true
+}));
 } -->
