@@ -19,6 +19,7 @@ const {
   addVehicle,
   updateVehicle,
   deleteFamilyMember,
+  changePassword,
 } = require('../controllers/residentController');
 
 // Complaints routes (require authentication)
