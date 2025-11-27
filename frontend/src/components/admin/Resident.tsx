@@ -5,7 +5,7 @@ import Link from "next/link";
 import { FaPlus, FaEye, FaEdit, FaTrash } from "react-icons/fa";
 
 interface Resident {
-  id: string;
+  _id: string;
   name: string;
   flat: string;
   joined: string;
@@ -21,21 +21,40 @@ export default function ResidentsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [residentToDelete, setResidentToDelete] = useState<Resident | null>(null);
+  const [residentToDelete, setResidentToDelete] = useState<Resident | null>(
+    null
+  );
+
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 
   const fetchResidents = async () => {
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+      setLoading(true);
       const response = await fetch(`${backendUrl}/admin/residents`, {
-        credentials: 'include', // Send cookies with request
+        credentials: "include",
       });
       if (!response.ok) {
-        throw new Error('Failed to fetch residents');
+        throw new Error("Failed to fetch residents");
       }
       const data = await response.json();
-      setResidents(data);
+
+      // Map backend response to Resident interface
+      const formatted = data.map((res: any) => ({
+        _id: res._id,
+        name: `${res.first_name} ${res.last_name}`,
+        flat: `${res.block} - ${res.flat_number}`,
+        email: res.email,
+        phone: res.mobile_number,
+        joined: new Date(res.createdAt).toLocaleDateString(),
+        members: res.number_of_member || 0,
+        vehicles: (res.two_wheeler ? 1 : 0) + (res.four_wheeler ? 1 : 0),
+        status: res.status || "active",
+      }));
+
+      setResidents(formatted);
+      setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -50,33 +69,32 @@ export default function ResidentsPage() {
     setShowDeleteModal(true);
   };
 
- const confirmDelete = async () => {
-  if (!residentToDelete) return;
+  const confirmDelete = async () => {
+    if (!residentToDelete) return;
 
-  try {
-    const response = await fetch(
-      `https://nextsms.onrender.com/admin/residents/${residentToDelete.id}`,
-      {
-        method: 'DELETE',
-        credentials: 'include', // REQUIRED for backend auth cookies
+    try {
+      const response = await fetch(
+        `${backendUrl}/admin/residents/${residentToDelete._id}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to delete resident");
       }
-    );
 
-    if (!response.ok) {
-      throw new Error('Failed to delete resident');
+      await fetchResidents();
+      setShowDeleteModal(false);
+      setResidentToDelete(null);
+    } catch (err) {
+      alert(
+        "Failed to delete resident: " +
+          (err instanceof Error ? err.message : "Unknown error")
+      );
     }
-
-    await fetchResidents();
-    setShowDeleteModal(false);
-    setResidentToDelete(null);
-  } catch (err) {
-    alert(
-      'Failed to delete resident: ' +
-        (err instanceof Error ? err.message : 'Unknown error')
-    );
-  }
-};
-
+  };
 
   const cancelDelete = () => {
     setShowDeleteModal(false);
@@ -87,7 +105,9 @@ export default function ResidentsPage() {
     <div className="p-4 mt-15 md:p-6 lg:p-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
-        <h1 className="text-2xl font-bold text-gray-800">Resident Management</h1>
+        <h1 className="text-2xl font-bold text-gray-800">
+          Resident Management
+        </h1>
 
         {/* Changed to Link */}
         <Link
@@ -133,38 +153,20 @@ export default function ResidentsPage() {
           </thead>
           <tbody>
             {residents.map((r) => (
-              <tr key={r.id} className="border-t hover:bg-gray-50 transition-colors">
+              <tr
+                key={r._id}
+                className="border-t hover:bg-gray-50 transition-colors"
+              >
                 <td className="px-4 py-3">
                   <span className="font-semibold">{r.name}</span>
-                  <div className="text-sm text-gray-500">ID: {r.id}</div>
+                  <div className="text-sm text-gray-500">ID: {r._id}</div>
                 </td>
-                <td className="px-4 py-3">
-                  {r.flat}
-                  <div className="text-sm text-gray-500">Joined: {r.joined}</div>
-                </td>
-                <td className="px-4 py-3">
-                  {r.email}
-                  <div className="text-sm text-gray-500">{r.phone}</div>
-                </td>
-                <td className="px-4 py-3">
-                  {r.members} Members <br /> {r.vehicles} Vehicles
-                </td>
-                <td className="px-4 py-3">
-                  <span
-                    className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                      r.status === "active"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
-                    }`}
-                  >
-                    {r.status}
-                  </span>
-                </td>
+                ...
                 <td className="px-4 py-3 flex gap-3 text-lg">
                   <button className="text-blue-600 hover:text-blue-800">
                     <FaEye />
                   </button>
-                  <Link href={`/admin/residents/${r.id}/edit`}>
+                  <Link href={`/admin/residents/${r._id}/edit`}>
                     <button className="text-yellow-600 hover:text-yellow-800">
                       <FaEdit />
                     </button>
@@ -183,49 +185,53 @@ export default function ResidentsPage() {
 
         {/* Mobile View (Card Style) */}
         <div className="md:hidden space-y-4">
-          {residents.map((r) => (
-            <div key={r.id} className="border rounded-lg p-4 shadow-sm bg-white space-y-2">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h2 className="font-semibold">{r.name}</h2>
-                  <p className="text-sm text-gray-500">ID: {r.id}</p>
-                </div>
-                <span
-                  className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                    r.status === "active"
-                      ? "bg-green-100 text-green-700"
-                      : "bg-red-100 text-red-700"
-                  }`}
-                >
-                  {r.status}
-                </span>
-              </div>
-              <p className="text-gray-600">{r.flat}</p>
-              <p className="text-sm text-gray-500">Joined: {r.joined}</p>
-              <p className="text-gray-600">{r.email}</p>
-              <p className="text-sm text-gray-500">{r.phone}</p>
-              <p className="text-gray-600">
-                {r.members} Members, {r.vehicles} Vehicles
-              </p>
-              <div className="flex gap-4 pt-2 text-lg">
-                <button className="text-blue-600 hover:text-blue-800">
-                  <FaEye />
-                </button>
-                <Link href={`/admin/residents/${r.id}/edit`}>
-                  <button className="text-yellow-600 hover:text-yellow-800">
-                    <FaEdit />
-                  </button>
-                </Link>
-                <button
-                  className="text-red-600 hover:text-red-800"
-                  onClick={() => handleDelete(r)}
-                >
-                  <FaTrash />
-                </button>
-              </div>
-            </div>
-          ))}
+  {residents.map((r) => (
+    <div
+      key={r._id}  // fixed
+      className="border rounded-lg p-4 shadow-sm bg-white space-y-2"
+    >
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="font-semibold">{r.name}</h2>
+          <p className="text-sm text-gray-500">ID: {r._id}</p>  // fixed
         </div>
+        <span
+          className={`px-2 py-1 text-xs font-semibold rounded-full ${
+            r.status === "active"
+              ? "bg-green-100 text-green-700"
+              : "bg-red-100 text-red-700"
+          }`}
+        >
+          {r.status}
+        </span>
+      </div>
+      <p className="text-gray-600">{r.flat}</p>
+      <p className="text-sm text-gray-500">Joined: {r.joined}</p>
+      <p className="text-gray-600">{r.email}</p>
+      <p className="text-sm text-gray-500">{r.phone}</p>
+      <p className="text-gray-600">
+        {r.members} Members, {r.vehicles} Vehicles
+      </p>
+      <div className="flex gap-4 pt-2 text-lg">
+        <button className="text-blue-600 hover:text-blue-800">
+          <FaEye />
+        </button>
+        <Link href={`/admin/residents/${r._id}/edit`}>  // fixed
+          <button className="text-yellow-600 hover:text-yellow-800">
+            <FaEdit />
+          </button>
+        </Link>
+        <button
+          className="text-red-600 hover:text-red-800"
+          onClick={() => handleDelete(r)}
+        >
+          <FaTrash />
+        </button>
+      </div>
+    </div>
+  ))}
+</div>
+
       </div>
 
       {/* Delete Confirmation Modal */}
@@ -237,12 +243,15 @@ export default function ResidentsPage() {
                 <FaTrash className="h-6 w-6 text-red-600" />
               </div>
               <div className="ml-3">
-                <h3 className="text-lg font-medium text-gray-900">Delete Resident</h3>
+                <h3 className="text-lg font-medium text-gray-900">
+                  Delete Resident
+                </h3>
               </div>
             </div>
             <div className="mb-6">
               <p className="text-sm text-gray-500">
-                Are you sure you want to delete <span className="font-semibold">{residentToDelete.name}</span>?
+                Are you sure you want to delete{" "}
+                <span className="font-semibold">{residentToDelete.name}</span>?
                 This action cannot be undone.
               </p>
             </div>
