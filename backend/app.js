@@ -64,13 +64,15 @@ app.use(session({
   secret: config.sessionSecret,
   resave: false,
   saveUninitialized: false,
+  proxy: true, // <-- REQUIRED for Render HTTPS
   cookie: {
-    secure: config.isProduction, // true in HTTPS
+    secure: true, // force HTTPS cookies
     httpOnly: true,
-    sameSite: "none", // Required for different domain
+    sameSite: "none",
     maxAge: 24 * 60 * 60 * 1000
   }
 }));
+
 
 // Passport configuration
 app.use(passport.initialize());
