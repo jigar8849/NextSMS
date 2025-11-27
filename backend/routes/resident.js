@@ -13,6 +13,12 @@ const {
   getBills,
   createPaymentOrder,
   verifyPayment,
+   getProfile,
+  updateProfile,
+  addFamilyMember,
+  addVehicle,
+  updateVehicle,
+  deleteFamilyMember,
 } = require('../controllers/residentController');
 
 // Complaints routes (require authentication)
@@ -37,6 +43,14 @@ router.get('/bills', authenticateResident, getBills);
 // Payment routes (require authentication)
 router.post('/payment/order', authenticateResident, createPaymentOrder);
 router.post('/payment/verify', authenticateResident, verifyPayment);
+
+// Profile routes (require authentication)
+router.get('/profile', authenticateResident, getProfile);
+router.put('/profile', authenticateResident, updateProfile);
+router.post('/family', authenticateResident, addFamilyMember);
+router.delete('/family/:index', authenticateResident, deleteFamilyMember);
+router.post('/vehicles', authenticateResident, addVehicle);
+router.put('/vehicles/:id', authenticateResident, updateVehicle);
 
 module.exports = router;
 

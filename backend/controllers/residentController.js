@@ -492,6 +492,290 @@ const verifyPayment = async (req, res) => {
   }
 };
 
+
+
+// Get profile data for logged-in resident
+const getProfile = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Unauthorized. Please log in as resident.' });
+    }
+
+    const resident = await NewMember.findById(req.user._id)
+      .select('-hash -salt') // Exclude password fields
+      .populate('society', 'name address');
+
+    if (!resident) {
+      return res.status(404).json({ error: 'Resident not found' });
+    }
+
+    // Format profile data
+    const profileData = {
+      profile: {
+        id: resident._id,
+        firstName: resident.first_name,
+        lastName: resident.last_name,
+        email: resident.email,
+        phone: resident.mobile_number.toString(),
+        emergency: resident.emergency_number.toString(),
+        dob: resident.birth_date.toISOString().split('T')[0],
+        flat: `Block ${resident.block} - Floor ${resident.floor_number} - Flat ${resident.flat_number}`,
+        role: resident.role === 'admin' ? 'Admin' : 'Resident',
+        since: resident.createdAt.toISOString().split('T')[0],
+        block: resident.block,
+        floorNumber: resident.floor_number,
+        flatNumber: resident.flat_number
+      },
+      family: resident.name_of_each_member || [],
+      vehicles: []
+    };
+
+    // Add vehicles if they exist
+    if (resident.two_wheeler) {
+      profileData.vehicles.push({
+        id: 'two_wheeler',
+        regNo: resident.two_wheeler,
+        type: '2-wheeler'
+      });
+    }
+
+    if (resident.four_wheeler) {
+      profileData.vehicles.push({
+        id: 'four_wheeler',
+        regNo: resident.four_wheeler,
+        type: '4-wheeler'
+      });
+    }
+
+    // Add stats
+    profileData.stats = {
+      totalFamilyMembers: resident.name_of_each_member?.length || 0,
+      totalVehicles: profileData.vehicles.length,
+      memberSince: resident.createdAt.toISOString().split('T')[0]
+    };
+
+    res.status(200).json(profileData);
+  } catch (error) {
+    console.error('Error fetching profile:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Update profile
+const updateProfile = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Unauthorized. Please log in as resident.' });
+    }
+
+    const {
+      firstName,
+      lastName,
+      phone,
+      emergency,
+      dob,
+      familyMembers
+    } = req.body;
+
+    const updateData = {
+      first_name: firstName,
+      last_name: lastName,
+      mobile_number: parseInt(phone),
+      emergency_number: parseInt(emergency),
+      birth_date: new Date(dob),
+      name_of_each_member: familyMembers
+    };
+
+    // Remove undefined fields
+    Object.keys(updateData).forEach(key => {
+      if (updateData[key] === undefined) {
+        delete updateData[key];
+      }
+    });
+
+    const updatedResident = await NewMember.findByIdAndUpdate(
+      req.user._id,
+      updateData,
+      { new: true, runValidators: true }
+    ).select('-hash -salt');
+
+    res.status(200).json({ 
+      success: true,
+      message: 'Profile updated successfully',
+      profile: updatedResident 
+    });
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ error: 'Validation failed', details: error.errors });
+    }
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Add family member
+const addFamilyMember = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Unauthorized. Please log in as resident.' });
+    }
+
+    const { name } = req.body;
+
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: 'Family member name is required' });
+    }
+
+    const resident = await NewMember.findById(req.user._id);
+    
+    // Add new family member to the array
+    const updatedFamily = [...(resident.name_of_each_member || []), name.trim()];
+    
+    const updatedResident = await NewMember.findByIdAndUpdate(
+      req.user._id,
+      { 
+        name_of_each_member: updatedFamily,
+        number_of_member: updatedFamily.length 
+      },
+      { new: true }
+    ).select('-hash -salt');
+
+    res.status(200).json({ 
+      success: true,
+      message: 'Family member added successfully',
+      family: updatedResident.name_of_each_member 
+    });
+  } catch (error) {
+    console.error('Error adding family member:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Add vehicle
+const addVehicle = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Unauthorized. Please log in as resident.' });
+    }
+
+    const { regNo, type } = req.body;
+    
+    if (!regNo || !type) {
+      return res.status(400).json({ error: 'Registration number and type are required' });
+    }
+
+    const updateField = type === '2-wheeler' ? 'two_wheeler' : 'four_wheeler';
+    
+    const resident = await NewMember.findById(req.user._id);
+    
+    // Check if vehicle already exists
+    if (resident[updateField]) {
+      return res.status(400).json({ error: `${type} already registered` });
+    }
+
+    const updatedResident = await NewMember.findByIdAndUpdate(
+      req.user._id,
+      { [updateField]: regNo },
+      { new: true }
+    ).select('-hash -salt');
+
+    res.status(200).json({ 
+      success: true,
+      message: 'Vehicle added successfully',
+      vehicle: {
+        id: updateField,
+        regNo: regNo,
+        type: type
+      }
+    });
+  } catch (error) {
+    console.error('Error adding vehicle:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Update vehicle
+const updateVehicle = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Unauthorized. Please log in as resident.' });
+    }
+
+    const { id } = req.params;
+    const { regNo } = req.body;
+
+    if (!regNo) {
+      return res.status(400).json({ error: 'Registration number is required' });
+    }
+
+    // Determine which vehicle field to update
+    const updateField = id === 'two_wheeler' ? 'two_wheeler' : 
+                       id === 'four_wheeler' ? 'four_wheeler' : null;
+
+    if (!updateField) {
+      return res.status(400).json({ error: 'Invalid vehicle ID' });
+    }
+
+    const updatedResident = await NewMember.findByIdAndUpdate(
+      req.user._id,
+      { [updateField]: regNo },
+      { new: true }
+    ).select('-hash -salt');
+
+    res.status(200).json({ 
+      success: true,
+      message: 'Vehicle updated successfully',
+      vehicle: {
+        id: updateField,
+        regNo: regNo,
+        type: updateField === 'two_wheeler' ? '2-wheeler' : '4-wheeler'
+      }
+    });
+  } catch (error) {
+    console.error('Error updating vehicle:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Delete family member
+const deleteFamilyMember = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Unauthorized. Please log in as resident.' });
+    }
+
+    const { index } = req.params;
+    const memberIndex = parseInt(index);
+
+    const resident = await NewMember.findById(req.user._id);
+    
+    if (!resident.name_of_each_member || memberIndex >= resident.name_of_each_member.length) {
+      return res.status(400).json({ error: 'Invalid family member index' });
+    }
+
+    // Remove the family member at specified index
+    const updatedFamily = resident.name_of_each_member.filter((_, i) => i !== memberIndex);
+    
+    const updatedResident = await NewMember.findByIdAndUpdate(
+      req.user._id,
+      { 
+        name_of_each_member: updatedFamily,
+        number_of_member: updatedFamily.length 
+      },
+      { new: true }
+    ).select('-hash -salt');
+
+    res.status(200).json({ 
+      success: true,
+      message: 'Family member removed successfully',
+      family: updatedResident.name_of_each_member 
+    });
+  } catch (error) {
+    console.error('Error deleting family member:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 module.exports = {
   addComplaint,
   getComplaints,
@@ -504,4 +788,10 @@ module.exports = {
   getBills,
   createPaymentOrder,
   verifyPayment,
+  getProfile,
+  updateProfile,
+  addFamilyMember,
+  addVehicle,
+  updateVehicle,
+  deleteFamilyMember,
 };
