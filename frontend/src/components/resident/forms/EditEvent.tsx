@@ -30,7 +30,7 @@ export default function EditEventPage() {
   useEffect(() => {
     const fetchEvent = async () => {
       try {
-        const response = await fetch(`http://localhost:3001/resident/api/events/${eventId}`, {
+        const response = await fetch(`https://nextsms.onrender.com/resident//events/${eventId}`, {
           credentials: 'include',
         });
 
