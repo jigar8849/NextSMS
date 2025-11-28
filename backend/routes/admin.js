@@ -32,7 +32,7 @@ router.delete('/residents/:id', authenticateAdmin, adminController.deleteResiden
 // Bill Management
 router.post('/createBill', authenticateAdmin, adminController.createBill);
 router.get('/payments', authenticateAdmin, adminController.getPayments);
-router.get('/payments/mark/:id', authenticateAdmin, adminController.markPaymentAsPaid);
+router.put('/payments/mark/:id', authenticateAdmin, adminController.markPaymentAsPaid);
 
 // Employee Management
 router.post('/addNewEmployee', authenticateAdmin, adminController.addNewEmployee);
