@@ -817,14 +817,50 @@ const markPaymentAsPaid = async (req, res) => {
     }
 
     const { id } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ error: 'Invalid payment ID' });
-    }
+    let residentBill;
 
-    // Find the resident bill and check if it belongs to the admin's society
-    const residentBill = await ResidentBill.findById(id).populate('resident', 'society');
-    if (!residentBill) {
-      return res.status(404).json({ error: 'Payment not found' });
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      // Existing ResidentBill
+      residentBill = await ResidentBill.findById(id).populate('resident', 'society');
+      if (!residentBill) {
+        return res.status(404).json({ error: 'Payment not found' });
+      }
+    } else {
+      // Composite ID: billTemplateId-residentId
+      const [billTemplateId, residentId] = id.split('-');
+      if (!mongoose.Types.ObjectId.isValid(billTemplateId) || !mongoose.Types.ObjectId.isValid(residentId)) {
+        return res.status(400).json({ error: 'Invalid payment ID' });
+      }
+
+      // Check if ResidentBill exists
+      residentBill = await ResidentBill.findOne({
+        resident: residentId,
+        billTemplate: billTemplateId
+      }).populate('resident', 'society');
+
+      if (!residentBill) {
+        // Fetch bill template and resident to create ResidentBill
+        const billTemplate = await AdminBillTemplate.findById(billTemplateId);
+        const resident = await NewMember.findById(residentId);
+
+        if (!billTemplate || !resident) {
+          return res.status(404).json({ error: 'Bill template or resident not found' });
+        }
+
+        // Create ResidentBill
+        residentBill = new ResidentBill({
+          resident: resident._id,
+          billTemplate: billTemplate._id,
+          amount: billTemplate.amount,
+          dueDate: billTemplate.dueDate,
+          penaltyPerDay: billTemplate.penalty,
+          isPaid: false
+        });
+
+        await residentBill.save();
+        // Re-populate after save
+        residentBill = await ResidentBill.findById(residentBill._id).populate('resident', 'society');
+      }
     }
 
     // Check if the resident belongs to the admin's society
