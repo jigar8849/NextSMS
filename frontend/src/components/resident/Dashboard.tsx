@@ -1,4 +1,7 @@
 // app/(resident)/resident/page.tsx
+"use client";
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Bell,
@@ -14,17 +17,32 @@ import {
   ThumbsUp,
 } from "lucide-react";
 
+interface DashboardStats {
+  pendingBills: number;
+  openComplaints: number;
+  upcomingEvents: number;
+  vehicleCount: number;
+}
+
+interface Profile {
+  firstName: string;
+  lastName: string;
+  flat: string;
+  since: string;
+}
+
+
 // ----- Types (replace with your real ones later)
 type Bill = { id: string; title: string; due: string; amount: number; status: "Pending" | "Paid" };
 type Event = { id: string; title: string; date: string; place: string };
 type Notification = { id: string; text: string; timeAgo: string };
 
-// ----- Demo data (frontend only)
-const stats = [
-  { label: "Pending Bills", value: 2, Icon: CreditCard, tone: "bg-rose-100" },
-  { label: "Open Complaints", value: 1, Icon: Megaphone, tone: "bg-amber-100" },
-  { label: "Upcoming Events", value: 3, Icon: CalendarDays, tone: "bg-indigo-100" },
-  { label: "Your Vehicles", value: 2, Icon: Car, tone: "bg-emerald-100" },
+// ----- Dynamic stats based on API data
+const statsData = [
+  { label: "Pending Bills", key: "pendingBills", Icon: CreditCard, tone: "bg-rose-100" },
+  { label: "Open Complaints", key: "openComplaints", Icon: Megaphone, tone: "bg-amber-100" },
+  { label: "Upcoming Events", key: "upcomingEvents", Icon: CalendarDays, tone: "bg-indigo-100" },
+  { label: "Your Vehicles", key: "vehicleCount", Icon: Car, tone: "bg-emerald-100" },
 ];
 
 // ----- Small UI bits
@@ -57,7 +75,49 @@ function SectionHeader({
 }
 
 export default function ResidentDashboard() {
-  const residentName = "Jigar Prajapati";
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        // Fetch dashboard stats
+        const statsResponse = await fetch('https://nextsms.onrender.com/resident/dashboard/stats', {
+          method: 'GET',
+          credentials: 'include',
+        });
+
+        if (!statsResponse.ok) throw new Error('Failed to fetch dashboard stats');
+        const statsData = await statsResponse.json();
+
+        // Fetch profile data for resident name
+        const profileResponse = await fetch('https://nextsms.onrender.com/resident/profile', {
+          method: 'GET',
+          credentials: 'include',
+        });
+
+        if (!profileResponse.ok) throw new Error('Failed to fetch profile data');
+        const profileData = await profileResponse.json();
+
+        setStats(statsData.stats);
+        setProfile(profileData.profile);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  if (loading) return <div className="p-6 mt-15 text-center">Loading dashboard data...</div>;
+  if (error) return <div className="p-6 mt-15 text-center text-red-500">Error: {error}</div>;
+  if (!stats || !profile) return <div className="p-6 mt-15 text-center">No data available</div>;
+
+  const residentName = `${profile.firstName} ${profile.lastName}`;
 
   return (
     <div className="space-y-6 mt-15">
@@ -99,7 +159,7 @@ export default function ResidentDashboard() {
 
       {/* STATS */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map(({ label, value, Icon, tone }) => (
+        {statsData.map(({ label, key, Icon, tone }) => (
           <Card key={label} className="p-4">
             <div className="flex items-center gap-4">
               <div className={`rounded-lg p-3 ${tone}`}>
@@ -107,7 +167,7 @@ export default function ResidentDashboard() {
               </div>
               <div>
                 <p className="text-sm text-gray-600">{label}</p>
-                <p className="text-2xl font-bold text-gray-900">{value}</p>
+                <p className="text-2xl font-bold text-gray-900">{stats[key as keyof DashboardStats]}</p>
               </div>
             </div>
           </Card>
@@ -130,8 +190,8 @@ export default function ResidentDashboard() {
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-lg font-bold text-gray-900">{residentName}</p>
-              <p className="text-sm text-gray-600">Flat: Home D-11 • Tower: Home</p>
-              <p className="text-xs text-gray-500">Member since Jan 2023</p>
+              <p className="text-sm text-gray-600">Flat: {profile.flat}</p>
+              <p className="text-xs text-gray-500">Member since {new Date(profile.since).toLocaleString("en-IN", { month: "short", year: "numeric" })}</p>
             </div>
             <div className="flex items-center gap-3">
               <div className="rounded-lg border border-gray-200 p-3">

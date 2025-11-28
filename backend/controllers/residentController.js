@@ -872,6 +872,60 @@ const deleteFamilyMember = async (req, res) => {
 };
 
 
+// Get dashboard stats for logged-in resident
+const getDashboardStats = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Unauthorized. Please log in as resident.' });
+    }
+
+    const residentId = req.user._id;
+
+    // Get pending bills count
+    const pendingBills = await ResidentBill.countDocuments({
+      resident: residentId,
+      isPaid: false
+    });
+
+    // Get open complaints count (not resolved)
+    const openComplaints = await Complaints.countDocuments({
+      resident: residentId,
+      status: { $nin: ['Complete', 'Reject'] } // Not resolved or rejected
+    });
+
+    // Get upcoming events count (future events)
+    const upcomingEvents = await Event.countDocuments({
+      createdBy: residentId,
+      date: { $gte: new Date() },
+      status: { $in: ['Pending', 'Approved'] }
+    });
+
+    // Get vehicles count for the resident
+    const resident = await NewMember.findById(residentId);
+    let vehicleCount = 0;
+    if (resident) {
+      if (resident.two_wheeler) vehicleCount++;
+      if (resident.four_wheeler) vehicleCount++;
+    }
+
+    const stats = {
+      pendingBills,
+      openComplaints,
+      upcomingEvents,
+      vehicleCount
+    };
+
+    res.status(200).json({
+      success: true,
+      stats
+    });
+
+  } catch (error) {
+    console.error('Error fetching dashboard stats:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 // Change password for logged-in resident
 const changePassword = async (req, res) => {
   try {
@@ -926,6 +980,7 @@ module.exports = {
   addVehicle,
   updateVehicle,
   deleteFamilyMember,
+  getDashboardStats,
   changePassword,
 
 };

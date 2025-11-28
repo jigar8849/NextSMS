@@ -19,6 +19,7 @@ const {
   addVehicle,
   updateVehicle,
   deleteFamilyMember,
+  getDashboardStats,
   changePassword,
 } = require('../controllers/residentController');
 
@@ -66,7 +67,8 @@ router.delete('/family/:index', authenticateResident, deleteFamilyMember);
 router.post('/vehicles', authenticateResident, addVehicle);
 router.put('/vehicles/:id', authenticateResident, updateVehicle);
 
-
+// Dashboard stats route (require authentication)
+router.get('/dashboard/stats', authenticateResident, getDashboardStats);
 
 // Add this route to your existing resident routes
 router.put('/change-password', authenticateResident, changePassword);
