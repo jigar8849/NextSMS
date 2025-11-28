@@ -22,7 +22,41 @@ export default function NewEventPage() {
     endTime: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
+  const [availabilityStatus, setAvailabilityStatus] = useState<{ available: boolean; conflict?: any } | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const checkAvailability = async () => {
+    setIsCheckingAvailability(true);
+    setAvailabilityStatus(null);
+
+    try {
+      const params = new URLSearchParams({
+        venue: VENUES.find(v => v.id === form.venueId)?.name || '',
+        date: form.date,
+        startTime: form.startTime,
+        endTime: form.endTime,
+      });
+
+      const response = await fetch(`https://nextsms.onrender.com/resident/events/availability?${params}`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setAvailabilityStatus({ available: data.available, conflict: data.conflict });
+      } else {
+        setMessage({ type: 'error', text: data.message });
+      }
+    } catch (error) {
+      console.error('Error checking availability:', error);
+      setMessage({ type: 'error', text: 'Failed to check availability. Please try again.' });
+    } finally {
+      setIsCheckingAvailability(false);
+    }
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -198,14 +232,33 @@ export default function NewEventPage() {
               {message.text}
             </div>
           )}
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <CalendarDays className="h-4 w-4" />
-            {isSubmitting ? 'Booking...' : 'Book Now'}
-          </button>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={checkAvailability}
+              disabled={isCheckingAvailability}
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-gray-600 px-6 py-3 text-sm font-semibold text-white shadow hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isCheckingAvailability ? 'Checking...' : 'Check Availability'}
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <CalendarDays className="h-4 w-4" />
+              {isSubmitting ? 'Booking...' : 'Book Now'}
+            </button>
+          </div>
+          {availabilityStatus && (
+            <div className={`mt-4 p-3 rounded-lg text-sm ${
+              availabilityStatus.available
+                ? 'bg-green-50 text-green-700 border border-green-200'
+                : 'bg-red-50 text-red-700 border border-red-200'
+            }`}>
+              {availabilityStatus.available ? 'Venue is available!' : `Venue is not available. ${availabilityStatus.conflict ? `Conflict: ${availabilityStatus.conflict.title} (${availabilityStatus.conflict.startTime} - ${availabilityStatus.conflict.endTime})` : ''}`}
+            </div>
+          )}
         </div>
       </form>
     </main>

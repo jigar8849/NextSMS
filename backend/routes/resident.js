@@ -32,6 +32,19 @@ router.get('/events', getEvents); // No auth - anyone can view events
 router.put('/events/:id', authenticateResident, updateEvent);
 router.delete('/events/:id', authenticateResident, deleteEvent);
 
+// Availability check route (require authentication)
+router.get('/events/availability', authenticateResident, (req, res) => {
+  const { venue, date, startTime, endTime } = req.query;
+
+  if (!venue || !date || !startTime || !endTime) {
+    return res.status(400).json({ error: 'venue, date, startTime, and endTime are required' });
+  }
+
+  checkAvailability(venue, date, startTime, endTime)
+    .then(result => res.status(200).json(result))
+    .catch(error => res.status(500).json({ error: 'Internal server error' }));
+});
+
 // Parking routes (require authentication)
 router.get('/parking', authenticateResident, getParking);
 

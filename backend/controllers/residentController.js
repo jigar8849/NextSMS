@@ -102,6 +102,59 @@ function mapStatus(backendStatus) {
   }
 }
 
+// Check availability for event booking
+const checkAvailability = async (venue, date, startTime, endTime, excludeEventId = null) => {
+  try {
+    // Convert times to comparable format (minutes since midnight)
+    const startMinutes = timeToMinutes(startTime);
+    const endMinutes = timeToMinutes(endTime);
+
+    // Build query to find conflicting events
+    const query = {
+      venue: venue,
+      date: new Date(date),
+      status: { $in: ['Pending', 'Approved'] } // Only check pending/approved events
+    };
+
+    // Exclude current event if updating
+    if (excludeEventId) {
+      query._id = { $ne: excludeEventId };
+    }
+
+    const conflictingEvents = await Event.find(query);
+
+    // Check for time overlaps
+    for (const event of conflictingEvents) {
+      const eventStart = timeToMinutes(event.startTime);
+      const eventEnd = timeToMinutes(event.endTime);
+
+      // Check if times overlap
+      if (startMinutes < eventEnd && endMinutes > eventStart) {
+        return {
+          available: false,
+          conflict: {
+            title: event.title,
+            startTime: event.startTime,
+            endTime: event.endTime,
+            status: event.status
+          }
+        };
+      }
+    }
+
+    return { available: true };
+  } catch (error) {
+    console.error('Error checking availability:', error);
+    throw error;
+  }
+};
+
+// Helper function to convert HH:MM to minutes since midnight
+const timeToMinutes = (timeString) => {
+  const [hours, minutes] = timeString.split(':').map(Number);
+  return hours * 60 + minutes;
+};
+
 // Add new event
 const addEvent = async (req, res) => {
   try {
@@ -129,6 +182,15 @@ const addEvent = async (req, res) => {
     const venue = VENUES[venueId];
     if (!venue) {
       return res.status(400).json({ error: 'Invalid venue selected' });
+    }
+
+    // Check availability before booking
+    const availability = await checkAvailability(venue, date, startTime, endTime);
+    if (!availability.available) {
+      return res.status(409).json({
+        error: 'Venue not available at the selected time',
+        conflict: availability.conflict
+      });
     }
 
     // Create new event
@@ -296,6 +358,30 @@ const updateEvent = async (req, res) => {
 
     const { id } = req.params;
     const updateData = req.body;
+
+    // If updating venue, date, startTime, or endTime, check availability
+    if (updateData.venue || updateData.date || updateData.startTime || updateData.endTime) {
+      // Get current event to check against
+      const currentEvent = await Event.findById(id);
+      if (!currentEvent) {
+        return res.status(404).json({ error: 'Event not found' });
+      }
+
+      // Use updated values or fallback to current values
+      const venue = updateData.venue || currentEvent.venue;
+      const date = updateData.date || currentEvent.date.toISOString().split('T')[0];
+      const startTime = updateData.startTime || currentEvent.startTime;
+      const endTime = updateData.endTime || currentEvent.endTime;
+
+      // Check availability, excluding the current event
+      const availability = await checkAvailability(venue, date, startTime, endTime, id);
+      if (!availability.available) {
+        return res.status(409).json({
+          error: 'Venue not available at the updated time',
+          conflict: availability.conflict
+        });
+      }
+    }
 
     // Find and update event, ensure user owns it
     const event = await Event.findOneAndUpdate(
@@ -824,6 +910,7 @@ const changePassword = async (req, res) => {
 module.exports = {
   addComplaint,
   getComplaints,
+  checkAvailability,
   addEvent,
   getEvents,
   updateEvent,

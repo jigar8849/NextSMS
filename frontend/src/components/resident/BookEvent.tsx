@@ -183,12 +183,15 @@ export default function EventsPage() {
               {availabilityNote(v)}
             </div>
 
-            <Link
-              href={``}
+            <button
+              onClick={() => {
+                // TODO: Implement availability check functionality
+                alert('Availability check not yet implemented');
+              }}
               className="mt-4 block w-full rounded-lg bg-indigo-50 px-4 py-2 text-center text-sm font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-200 hover:bg-indigo-100"
             >
               Check Availability
-            </Link>
+            </button>
           </div>
         ))}
       </div>
