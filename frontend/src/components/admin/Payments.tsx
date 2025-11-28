@@ -92,27 +92,27 @@ export default function PaymentManagement() {
       payment.billTitle.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleMarkAsPaid = async (_id: string) => {
-    try {
-      console.log("Sent Payment ID:", _id);
+ const handleMarkAsPaid = async (id: string) => {
+  try {
+    const response = await fetch(`https://nextsms.onrender.com/admin/payments/mark/${id}`, {
+      method: "GET",
+      credentials: "include",
+    });
 
-      const res = await fetch(`https://nextsms.onrender.com/admin/payments/${_id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        credentials: "include",
-      });
-
-      if (!res.ok) throw new Error("Failed to update");
-
-      alert("Payment updated successfully");
-      window.location.reload();
-    } catch (err) {
-      console.error(err);
+    if (!response.ok) {
+      throw new Error(`Failed: ${response.status}`);
     }
-  };
+
+    const data = await response.json();
+    console.log("Payment Updated:", data);
+
+    // Refresh table after update
+    fetchPayments();
+  } catch (err) {
+    console.error("Payment Update Error:", err);
+  }
+};
+
 
   return (
     <div className="p-6 mt-15">
