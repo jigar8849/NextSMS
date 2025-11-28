@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Search, DollarSign, CreditCard, Filter } from "lucide-react";
 
 interface Payment {
-  _id: string;
+  id: string;
   residentName: string;
   flat: string;
   billTitle: string;
@@ -209,7 +209,7 @@ export default function PaymentManagement() {
             </thead>
             <tbody>
               {filteredPayments.map((p) => (
-                <tr key={p._id} className="border-t hover:bg-gray-50">
+                <tr key={p.id} className="border-t hover:bg-gray-50">
                   <td className="p-3">
                     <p className="font-bold">{p.residentName}</p>
                     <p className="text-sm text-gray-600">{p.flat}</p>
@@ -246,7 +246,7 @@ export default function PaymentManagement() {
                   <td className="p-3">
                     {!p.isPaid && (
                       <button
-                        onClick={() => handleMarkAsPaid(p._id)}
+                        onClick={() => handleMarkAsPaid(p.id)}
                         className="inline-flex items-center gap-2 rounded-md bg-green-600 hover:bg-green-700 text-white px-3 py-2 text-sm font-semibold"
                       >
                         Mark as Paid
