@@ -23,7 +23,6 @@ interface Payment {
   billTemplateId: string;
 }
 
-
 export default function PaymentManagement() {
   const [search, setSearch] = useState("");
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -40,77 +39,80 @@ export default function PaymentManagement() {
   }, []);
 
   const fetchPayments = async () => {
-  try {
-    setLoading(true);
+    try {
+      setLoading(true);
 
-    const response = await fetch('https://nextsms.onrender.com/admin/payments', {
-      method: 'GET',
-      credentials: 'include', // 🔥 This sends cookies to backend
-    });
+      const response = await fetch(
+        "https://nextsms.onrender.com/admin/payments",
+        {
+          method: "GET",
+          credentials: "include", // 🔥 This sends cookies to backend
+        }
+      );
 
-    if (!response.ok) {
-      throw new Error('Failed to fetch payments');
+      if (!response.ok) {
+        throw new Error("Failed to fetch payments");
+      }
+
+      const data = await response.json();
+      setPayments(data);
+
+      // Calculate stats
+      const totalCollected = data
+        .filter((p: Payment) => p.isPaid)
+        .reduce((sum: number, p: Payment) => sum + p.currentAmount, 0);
+
+      const pendingAmount = data
+        .filter((p: Payment) => !p.isPaid)
+        .reduce((sum: number, p: Payment) => sum + p.currentAmount, 0);
+
+      const totalPayments = data.length;
+      const paidPayments = data.filter((p: Payment) => p.isPaid).length;
+      const collectionRate =
+        totalPayments > 0
+          ? Math.round((paidPayments / totalPayments) * 100)
+          : 0;
+
+      setStats({
+        totalCollected,
+        pendingAmount,
+        collectionRate,
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setLoading(false);
     }
+  };
 
-    const data = await response.json();
-    setPayments(data);
-
-    // Calculate stats
-    const totalCollected = data
-      .filter((p: Payment) => p.isPaid)
-      .reduce((sum: number, p: Payment) => sum + p.currentAmount, 0);
-
-    const pendingAmount = data
-      .filter((p: Payment) => !p.isPaid)
-      .reduce((sum: number, p: Payment) => sum + p.currentAmount, 0);
-
-    const totalPayments = data.length;
-    const paidPayments = data.filter((p: Payment) => p.isPaid).length;
-    const collectionRate = totalPayments > 0 ? Math.round((paidPayments / totalPayments) * 100) : 0;
-
-    setStats({
-      totalCollected,
-      pendingAmount,
-      collectionRate,
-    });
-  } catch (err) {
-    setError(err instanceof Error ? err.message : 'An error occurred');
-  } finally {
-    setLoading(false);
-  }
-};
-
-
-  const filteredPayments = payments.filter((payment) =>
-    payment.residentName.toLowerCase().includes(search.toLowerCase()) ||
-    payment.flat.toLowerCase().includes(search.toLowerCase()) ||
-    payment.billTitle.toLowerCase().includes(search.toLowerCase())
+  const filteredPayments = payments.filter(
+    (payment) =>
+      payment.residentName.toLowerCase().includes(search.toLowerCase()) ||
+      payment.flat.toLowerCase().includes(search.toLowerCase()) ||
+      payment.billTitle.toLowerCase().includes(search.toLowerCase())
   );
 
- const handleMarkAsPaid = async (id: string) => {
-  try {
-    const token = localStorage.getItem("token");
+  const handleMarkAsPaid = async (_id: string) => {
+    try {
+      console.log("Sent Payment ID:", _id);
 
-    const res = await fetch(`https://nextsms.onrender.com/admin/payments/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      credentials: "include",
-    });
+      const res = await fetch(`https://nextsms.onrender.com/admin/payments/${_id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        credentials: "include",
+      });
 
-    if (!res.ok) throw new Error("Failed to mark as paid");
+      if (!res.ok) throw new Error("Failed to update");
 
-    alert("Bill Updated Successfully!");
-    window.location.reload();
-  } catch (err) {
-    console.error(err);
-  }
-};
-
-
-
+      alert("Payment updated successfully");
+      window.location.reload();
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   return (
     <div className="p-6 mt-15">
@@ -141,21 +143,27 @@ export default function PaymentManagement() {
         <div className="bg-white p-4 rounded-lg shadow flex justify-between items-center">
           <div>
             <p className="text-gray-500">Total Collected</p>
-            <h2 className="text-xl font-bold text-green-600">₹{stats.totalCollected}</h2>
+            <h2 className="text-xl font-bold text-green-600">
+              ₹{stats.totalCollected}
+            </h2>
           </div>
           <DollarSign className="h-10 w-10 text-green-500" />
         </div>
         <div className="bg-white p-4 rounded-lg shadow flex justify-between items-center">
           <div>
             <p className="text-gray-500">Pending Amount</p>
-            <h2 className="text-xl font-bold text-red-500">₹{stats.pendingAmount}</h2>
+            <h2 className="text-xl font-bold text-red-500">
+              ₹{stats.pendingAmount}
+            </h2>
           </div>
           <CreditCard className="h-10 w-10 text-yellow-500" />
         </div>
         <div className="bg-white p-4 rounded-lg shadow flex justify-between items-center">
           <div>
             <p className="text-gray-500">Collection Rate</p>
-            <h2 className="text-xl font-bold text-blue-600">{stats.collectionRate}%</h2>
+            <h2 className="text-xl font-bold text-blue-600">
+              {stats.collectionRate}%
+            </h2>
           </div>
           <Filter className="h-10 w-10 text-blue-500" />
         </div>
@@ -202,7 +210,6 @@ export default function PaymentManagement() {
             <tbody>
               {filteredPayments.map((p) => (
                 <tr key={p._id} className="border-t hover:bg-gray-50">
-
                   <td className="p-3">
                     <p className="font-bold">{p.residentName}</p>
                     <p className="text-sm text-gray-600">{p.flat}</p>
@@ -211,7 +218,9 @@ export default function PaymentManagement() {
                   <td className="p-3">
                     ₹{p.currentAmount}
                     {p.penaltyAmount > 0 && (
-                      <p className="text-xs text-red-500">Penalty: ₹{p.penaltyAmount}</p>
+                      <p className="text-xs text-red-500">
+                        Penalty: ₹{p.penaltyAmount}
+                      </p>
                     )}
                   </td>
                   <td className="p-3">
@@ -224,21 +233,21 @@ export default function PaymentManagement() {
                     <span
                       className={`px-2 py-1 rounded-md text-sm font-medium ${
                         p.isPaid
-                          ? 'bg-green-100 text-green-600'
+                          ? "bg-green-100 text-green-600"
                           : p.isOverdue
-                          ? 'bg-red-100 text-red-600'
-                          : 'bg-yellow-100 text-yellow-600'
+                          ? "bg-red-100 text-red-600"
+                          : "bg-yellow-100 text-yellow-600"
                       }`}
                     >
-                      {p.isPaid ? 'Paid' : p.isOverdue ? 'Overdue' : 'Pending'}
+                      {p.isPaid ? "Paid" : p.isOverdue ? "Overdue" : "Pending"}
                     </span>
                   </td>
-                  <td className="p-3">{p.isPaid ? 'Online' : '-'}</td>
+                  <td className="p-3">{p.isPaid ? "Online" : "-"}</td>
                   <td className="p-3">
                     {!p.isPaid && (
                       <button
                         onClick={() => handleMarkAsPaid(p._id)}
-                        className="text-blue-600 hover:underline mr-2"
+                        className="inline-flex items-center gap-2 rounded-md bg-green-600 hover:bg-green-700 text-white px-3 py-2 text-sm font-semibold"
                       >
                         Mark as Paid
                       </button>
