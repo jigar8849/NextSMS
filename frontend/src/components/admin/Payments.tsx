@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Search, DollarSign, CreditCard, Filter } from "lucide-react";
 
 interface Payment {
-  id: string;
+  _id: string;
   residentName: string;
   flat: string;
   billTitle: string;
@@ -22,6 +22,7 @@ interface Payment {
   residentId: string;
   billTemplateId: string;
 }
+
 
 export default function PaymentManagement() {
   const [search, setSearch] = useState("");
@@ -86,25 +87,28 @@ export default function PaymentManagement() {
     payment.billTitle.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleMarkAsPaid = async (id: string) => {
+  const handleMarkAsPaid = async (_id: string) => {
   try {
-    const response = await fetch(`https://nextsms.onrender.com/admin/payments/${id}`, {
-      method: 'PUT',
-      credentials: 'include', // 🔥 Send cookies/session token
+    const response = await fetch(`https://nextsms.onrender.com/admin/payments/${_id}`, {
+      method: "PUT",
+      credentials: "include",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
+      body: JSON.stringify({ isPaid: true }) // 👈 send update
     });
 
     if (!response.ok) {
-      throw new Error('Failed to update payment status');
+      throw new Error("Failed to update payment status");
     }
 
-    fetchPayments(); // Refresh data
+    fetchPayments(); // refresh table
+
   } catch (err) {
-    console.error('Error marking as paid:', err);
+    console.error("Error marking as paid:", err);
   }
 };
+
 
 
   return (
@@ -196,7 +200,8 @@ export default function PaymentManagement() {
             </thead>
             <tbody>
               {filteredPayments.map((p) => (
-                <tr key={p.id} className="border-t hover:bg-gray-50">
+                <tr key={p._id} className="border-t hover:bg-gray-50">
+
                   <td className="p-3">
                     <p className="font-bold">{p.residentName}</p>
                     <p className="text-sm text-gray-600">{p.flat}</p>
@@ -231,7 +236,7 @@ export default function PaymentManagement() {
                   <td className="p-3">
                     {!p.isPaid && (
                       <button
-                        onClick={() => handleMarkAsPaid(p.id)}
+                        onClick={() => handleMarkAsPaid(p._id)}
                         className="text-blue-600 hover:underline mr-2"
                       >
                         Mark as Paid
