@@ -21,6 +21,7 @@ interface Payment {
   paymentStatus: string;
   residentId: string;
   billTemplateId: string;
+  paymentMethod: string;
 }
 
 export default function PaymentManagement() {
@@ -242,7 +243,7 @@ export default function PaymentManagement() {
                       {p.isPaid ? "Paid" : p.isOverdue ? "Overdue" : "Pending"}
                     </span>
                   </td>
-                  <td className="p-3">{p.isPaid ? "Cash/Offline" : "-"}</td>
+                  <td className="p-3">{p.isPaid ? p.paymentMethod : "-"}</td>
                   <td className="p-3">
                     {!p.isPaid && (
                       <button
