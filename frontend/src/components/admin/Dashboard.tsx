@@ -1,8 +1,11 @@
 // app/dashboard/page.tsx (or pages/dashboard.tsx)
+'use client';
+
 import { FaUsers, FaCreditCard, FaExclamationCircle, FaCar, FaUserCog } from "react-icons/fa";
 import Link from "next/link";
+import { useState, useEffect } from 'react';
 
-interface DashboardProps {
+interface DashboardData {
   totalResidents: number;
   pendingPayments: number;
   activeComplaints: number;
@@ -11,14 +14,66 @@ interface DashboardProps {
   recentActivities: string[];
 }
 
-const Dashboard = ({
-  totalResidents,
-  pendingPayments,
-  activeComplaints,
-  parkingSlotsTaken,
-  totalParkingSlots,
-  recentActivities,
-}: DashboardProps) => {
+const Dashboard = () => {
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://nextsms.onrender.com';
+        const response = await fetch(`${backendUrl}/admin/dashboard`, {
+          method: 'GET',
+          credentials: 'include',
+        });
+        if (!response.ok) {
+          throw new Error('Failed to fetch dashboard data');
+        }
+        const dashboardData = await response.json();
+        setData(dashboardData);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <p className="text-lg">Loading dashboard data...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <p className="text-lg text-red-600">Error: {error}</p>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <p className="text-lg">No data available</p>
+      </div>
+    );
+  }
+
+  const {
+    totalResidents,
+    pendingPayments,
+    activeComplaints,
+    parkingSlotsTaken,
+    totalParkingSlots,
+    recentActivities,
+  } = data;
   return (
     <div className="mt-15 bg-gray-50">
       {/* Dashboard Header */}
@@ -86,22 +141,22 @@ const Dashboard = ({
         <div className="bg-white rounded-lg shadow p-4">
           <h5 className="font-bold mb-2 text-lg">Quick Actions</h5>
           <div className="grid grid-cols-2 gap-4 mt-4">
-            <Link href="admin/addNewResident" className="border p-4 rounded-lg flex flex-col items-center justify-center hover:shadow-md transition">
+            <Link href="/addNewResident" className="border p-4 rounded-lg flex flex-col items-center justify-center hover:shadow-md transition">
               <FaUsers className="text-blue-600 text-2xl mb-2" />
               <p className="text-blue-600 font-semibold text-sm">Add Resident</p>
             </Link>
 
-            <Link href="admin/payments" className="border p-4 rounded-lg flex flex-col items-center justify-center hover:shadow-md transition">
+            <Link href="/payments" className="border p-4 rounded-lg flex flex-col items-center justify-center hover:shadow-md transition">
               <FaCreditCard className="text-blue-600 text-2xl mb-2" />
               <p className="text-blue-600 font-semibold text-sm">Record Payment</p>
             </Link>
 
-            <Link href="admin/approveEvent" className="border p-4 rounded-lg flex flex-col items-center justify-center hover:shadow-md transition">
+            <Link href="/addEmployee" className="border p-4 rounded-lg flex flex-col items-center justify-center hover:shadow-md transition">
               <FaUserCog  className="text-blue-600 text-2xl mb-2" />
               <p className="text-blue-600 font-semibold text-sm">Add Employees</p>
             </Link>
 
-            <Link href="admin/complaints" className="border p-4 rounded-lg flex flex-col items-center justify-center hover:shadow-md transition">
+            <Link href="/complaints" className="border p-4 rounded-lg flex flex-col items-center justify-center hover:shadow-md transition">
               <FaExclamationCircle className="text-blue-600 text-2xl mb-2" />
               <p className="text-blue-600 font-semibold text-sm">View Complaints</p>
             </Link>
@@ -112,21 +167,4 @@ const Dashboard = ({
   );
 };
 
-// Example usage with static data
-export default function DashboardPage() {
-  return (
-    <Dashboard
-      totalResidents={23232}
-      pendingPayments={45000}
-      activeComplaints={1}
-      parkingSlotsTaken={1}
-      totalParkingSlots={32}
-      recentActivities={[
-        "John Doe paid maintenance bill",
-        "New complaint submitted by Jane Smith",
-        "John Doe paid maintenance bill",
-        "John Doe paid maintenance bill",
-      ]}
-    />
-  );
-}
+export default Dashboard;

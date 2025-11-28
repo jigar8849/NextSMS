@@ -45,4 +45,7 @@ router.get('/parking', authenticateAdmin, adminController.getParking);
 router.get('/complaints', authenticateAdmin, adminController.getComplaints);
 router.put('/complaints/:id/status', authenticateAdmin, adminController.updateComplaintStatus);
 
+// Dashboard
+router.get('/dashboard', authenticateAdmin, adminController.getDashboardStats);
+
 module.exports = router;

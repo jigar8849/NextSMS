@@ -890,6 +890,93 @@ const markPaymentAsPaid = async (req, res) => {
   }
 };
 
+// Get dashboard stats for the logged-in admin's society
+const getDashboardStats = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Unauthorized. Please log in as admin.' });
+    }
+    const societyId = req.user._id;
+
+    // Total Residents
+    const totalResidents = await NewMember.countDocuments({ society: societyId });
+
+    // Pending Payments (unpaid bills)
+    const pendingPaymentsCount = await ResidentBill.countDocuments({
+      resident: { $in: await NewMember.find({ society: societyId }).select('_id') },
+      isPaid: false
+    });
+
+    // Calculate total pending amount
+    const pendingPayments = await ResidentBill.find({
+      resident: { $in: await NewMember.find({ society: societyId }).select('_id') },
+      isPaid: false
+    }).populate('billTemplate', 'penalty');
+
+    let totalPendingAmount = 0;
+    const today = new Date();
+    for (const bill of pendingPayments) {
+      const dueDate = new Date(bill.dueDate);
+      const isOverdue = today > dueDate;
+      const daysOverdue = isOverdue ? Math.floor((today - dueDate) / (1000 * 60 * 60 * 24)) : 0;
+      const penalty = isOverdue ? (bill.penaltyPerDay || 0) * daysOverdue : 0;
+      totalPendingAmount += bill.amount + penalty;
+    }
+
+    // Active Complaints (not resolved)
+    const activeComplaints = await Complaints.countDocuments({
+      resident: { $in: await NewMember.find({ society: societyId }).select('_id') },
+      status: { $nin: ['Complete', 'Reject'] }
+    });
+
+    // Parking Slots
+    const society = await SocitySetUp.findById(societyId);
+    if (!society) {
+      return res.status(404).json({ error: 'Society not found' });
+    }
+
+    const residentsWithVehicles = await NewMember.find({
+      society: societyId,
+      $or: [
+        { two_wheeler: { $exists: true, $ne: '' } },
+        { four_wheeler: { $exists: true, $ne: '' } }
+      ]
+    });
+
+    const occupiedTwoWheeler = residentsWithVehicles.reduce(
+      (n, r) => n + (r.two_wheeler ? 1 : 0), 0
+    );
+    const occupiedFourWheeler = residentsWithVehicles.reduce(
+      (n, r) => n + (r.four_wheeler ? 1 : 0), 0
+    );
+
+    const totalParkingSlots = society.total_two_wheeler_slot + society.total_four_wheeler_slot;
+    const occupiedParkingSlots = occupiedTwoWheeler + occupiedFourWheeler;
+
+    // Recent Activities (simplified - last 5 activities)
+    const recentActivities = [
+      "Dashboard stats updated",
+      "System check completed",
+      "Maintenance reminder set",
+      "New resident onboarding",
+      "Bill generation completed"
+    ];
+
+    res.status(200).json({
+      totalResidents,
+      pendingPayments: Math.round(totalPendingAmount),
+      activeComplaints,
+      parkingSlotsTaken: occupiedParkingSlots,
+      totalParkingSlots,
+      recentActivities
+    });
+
+  } catch (error) {
+    console.error('Error fetching dashboard stats:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 module.exports = {
   createSocietyAccount,
   getAllSocieties,
@@ -910,4 +997,5 @@ module.exports = {
   updateComplaintStatus,
   getPayments,
   markPaymentAsPaid,
+  getDashboardStats,
 };
