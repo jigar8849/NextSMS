@@ -108,7 +108,7 @@ export default function ComplaintsPage() {
 
   const removeComplaint = async (id: string) => {
     try {
-      const response = await fetch(`/api/resident/complaints/${id}`, {
+      const response = await fetch(`https://nextsms.onrender.com/resident/complaints/${id}`, {
         method: 'DELETE',
         credentials: 'include',
       });
