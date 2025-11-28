@@ -475,11 +475,20 @@ const verifyPayment = async (req, res) => {
       return res.status(400).json({ error: 'Payment verification failed' });
     }
 
-    // Update bills to paid
-    await ResidentBill.updateMany(
-      { _id: { $in: billIds }, resident: req.user._id, isPaid: false },
-      { isPaid: true, paidAt: new Date() }
-    );
+    // Update bills to paid with online payment indicator
+    const bills = await ResidentBill.find({
+      _id: { $in: billIds },
+      resident: req.user._id,
+      isPaid: false
+    });
+
+    for (const bill of bills) {
+      await ResidentBill.findByIdAndUpdate(bill._id, {
+        isPaid: true,
+        paidAt: new Date(),
+        totalPaid: bill.amount + 1 // Add 1 to indicate online payment
+      });
+    }
 
     res.status(200).json({
       success: true,

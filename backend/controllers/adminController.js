@@ -795,6 +795,7 @@ const getPayments = async (req, res) => {
           isPaid: billData.isPaid,
           paidAt: paidAtFormatted,
           paymentStatus: paymentStatus,
+          paymentMethod: billData.totalPaid && billData.totalPaid > billData.amount ? 'Online' : 'Cash/Offline',
           residentId: resident._id.toString(),
           billTemplateId: billTemplate._id.toString()
         });
@@ -869,9 +870,10 @@ const markPaymentAsPaid = async (req, res) => {
     }
 
     // Mark as paid
-    residentBill.isPaid = true;
-    residentBill.paidAt = new Date();
-    residentBill.totalPaid = residentBill.amount; // Assuming totalPaid is the amount paid
+      residentBill.isPaid = true;
+      residentBill.paidAt = new Date();
+      residentBill.totalPaid = residentBill.amount;
+      residentBill.paymentMethod = 'Cash/Offline';
     await residentBill.save();
 
     res.status(200).json({

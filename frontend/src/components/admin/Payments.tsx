@@ -242,7 +242,7 @@ export default function PaymentManagement() {
                       {p.isPaid ? "Paid" : p.isOverdue ? "Overdue" : "Pending"}
                     </span>
                   </td>
-                  <td className="p-3">{p.isPaid ? "Online" : "-"}</td>
+                  <td className="p-3">{p.isPaid ? "Cash/Offline" : "-"}</td>
                   <td className="p-3">
                     {!p.isPaid && (
                       <button
