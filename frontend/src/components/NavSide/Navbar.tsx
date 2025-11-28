@@ -50,7 +50,7 @@ export default function Navbar() {
         return;
       }
 
-      setRole("Guest");
+      setRole("Admin");
       localStorage.removeItem("userType");
     } catch (err) {
       console.error("Role validation failed", err);

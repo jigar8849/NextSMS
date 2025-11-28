@@ -1,5 +1,5 @@
 // app/dashboard/page.tsx (or pages/dashboard.tsx)
-import { FaUsers, FaCreditCard, FaExclamationCircle, FaCar, FaCalendarAlt } from "react-icons/fa";
+import { FaUsers, FaCreditCard, FaExclamationCircle, FaCar, FaUserCog } from "react-icons/fa";
 import Link from "next/link";
 
 interface DashboardProps {
@@ -86,22 +86,22 @@ const Dashboard = ({
         <div className="bg-white rounded-lg shadow p-4">
           <h5 className="font-bold mb-2 text-lg">Quick Actions</h5>
           <div className="grid grid-cols-2 gap-4 mt-4">
-            <Link href="/addNewResident" className="border p-4 rounded-lg flex flex-col items-center justify-center hover:shadow-md transition">
+            <Link href="admin/addNewResident" className="border p-4 rounded-lg flex flex-col items-center justify-center hover:shadow-md transition">
               <FaUsers className="text-blue-600 text-2xl mb-2" />
               <p className="text-blue-600 font-semibold text-sm">Add Resident</p>
             </Link>
 
-            <Link href="/payments" className="border p-4 rounded-lg flex flex-col items-center justify-center hover:shadow-md transition">
+            <Link href="admin/payments" className="border p-4 rounded-lg flex flex-col items-center justify-center hover:shadow-md transition">
               <FaCreditCard className="text-blue-600 text-2xl mb-2" />
               <p className="text-blue-600 font-semibold text-sm">Record Payment</p>
             </Link>
 
-            <Link href="/approveEvent" className="border p-4 rounded-lg flex flex-col items-center justify-center hover:shadow-md transition">
-              <FaCalendarAlt className="text-blue-600 text-2xl mb-2" />
-              <p className="text-blue-600 font-semibold text-sm">Schedule Event</p>
+            <Link href="admin/approveEvent" className="border p-4 rounded-lg flex flex-col items-center justify-center hover:shadow-md transition">
+              <FaUserCog  className="text-blue-600 text-2xl mb-2" />
+              <p className="text-blue-600 font-semibold text-sm">Add Employees</p>
             </Link>
 
-            <Link href="/complaints" className="border p-4 rounded-lg flex flex-col items-center justify-center hover:shadow-md transition">
+            <Link href="admin/complaints" className="border p-4 rounded-lg flex flex-col items-center justify-center hover:shadow-md transition">
               <FaExclamationCircle className="text-blue-600 text-2xl mb-2" />
               <p className="text-blue-600 font-semibold text-sm">View Complaints</p>
             </Link>
