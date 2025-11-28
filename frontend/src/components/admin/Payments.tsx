@@ -87,27 +87,28 @@ export default function PaymentManagement() {
     payment.billTitle.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleMarkAsPaid = async (_id: string) => {
+ const handleMarkAsPaid = async (id: string) => {
   try {
-    const response = await fetch(`https://nextsms.onrender.com/admin/payments/${_id}`, {
+    const token = localStorage.getItem("token");
+
+    const res = await fetch(`https://nextsms.onrender.com/admin/payments/${id}`, {
       method: "PUT",
-      credentials: "include",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ isPaid: true }) // 👈 send update
+      credentials: "include",
     });
 
-    if (!response.ok) {
-      throw new Error("Failed to update payment status");
-    }
+    if (!res.ok) throw new Error("Failed to mark as paid");
 
-    fetchPayments(); // refresh table
-
+    alert("Bill Updated Successfully!");
+    window.location.reload();
   } catch (err) {
-    console.error("Error marking as paid:", err);
+    console.error(err);
   }
 };
+
 
 
 
