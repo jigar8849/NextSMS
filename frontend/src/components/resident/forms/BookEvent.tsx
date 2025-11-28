@@ -63,6 +63,13 @@ export default function NewEventPage() {
     setIsSubmitting(true);
     setMessage(null);
 
+    // Check if availability has been checked and venue is not available
+    if (availabilityStatus && !availabilityStatus.available) {
+      setMessage({ type: 'error', text: 'Venue is not available for the selected date and time. Please check availability and choose a different slot.' });
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       const response = await fetch('https://nextsms.onrender.com/resident/events', {
         method: 'POST',
