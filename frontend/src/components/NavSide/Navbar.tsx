@@ -2,9 +2,13 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Bell, ChevronDown } from "lucide-react";
+import { Bell, ChevronDown, Menu } from "lucide-react";
 
-export default function Navbar() {
+interface NavbarProps {
+  setSidebarOpen: (open: boolean) => void;
+}
+
+export default function Navbar({ setSidebarOpen }: NavbarProps) {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [role, setRole] = useState<string>("Loading...");
   const [nameInitial, setNameInitial] = useState("U");
@@ -58,8 +62,16 @@ export default function Navbar() {
   }
 
   return (
-    <header className="fixed top-0 left-64 right-0 h-16 bg-white shadow-md px-6 flex justify-between items-center">
-      <h1 className="text-lg font-semibold">Society Management</h1>
+    <header className="fixed top-0 left-0 lg:left-64 right-0 h-16 bg-white shadow-md px-6 flex justify-between items-center">
+      <div className="flex items-center gap-4">
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="lg:hidden p-2 hover:bg-blue-100 rounded-md"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
+        <h1 className="text-lg font-semibold">Society Management</h1>
+      </div>
 
       <div className="flex items-center gap-6">
         <button className="relative p-2 hover:bg-blue-100">
