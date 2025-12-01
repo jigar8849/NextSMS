@@ -55,7 +55,6 @@ export default function CreateBillForm({ onSubmit }: Props) {
 
     setLoading(true);
   try {
-      // const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://nextsms.onrender.com';
       const response = await fetch(`https://next-sms-ten.vercel.app/admin/createBill`, {
         method: 'POST',
         headers: {
