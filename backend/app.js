@@ -25,6 +25,7 @@ const adminRoutes = require('./routes/admin');
 const residentRoutes = require('./routes/resident');
 
 const app = express();
+const MONGO_URI = process.env.MONGODB_URI;
 
 // REQUIRED for Render reverse proxy
 app.set('trust proxy', 1);
@@ -61,22 +62,23 @@ app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 app.use(requestLogger);
 
 // Session configuration — required for cross-domain cookie
-app.use(session({
-  secret: config.sessionSecret,
-  resave: false,
-  saveUninitialized: false,
-  proxy: true, // Required for Render HTTPS
-  store: MongoStore.create({
-    mongoUrl: config.mongoUri,
-    ttl: 24 * 60 * 60 // 1 day
-  }),
-  cookie: {
-    secure: config.isProduction, // only secure in prod
-    httpOnly: true,
-    sameSite: "none",
-    maxAge: 24 * 60 * 60 * 1000
-  }
-}));
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    store: MongoStore({
+      mongoUrl: MONGO_URI,
+      collectionName: "sessions",
+      ttl: 14 * 24 * 60 * 60, // 14 days (optional)
+    }),
+    cookie: {
+      secure: process.env.NODE_ENV === "production",
+      httpOnly: true,
+      sameSite: "lax",
+    },
+  })
+);
 
 
 
