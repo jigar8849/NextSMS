@@ -44,7 +44,7 @@ export default function PaymentManagement() {
       setLoading(true);
 
       const response = await fetch(
-        "https://nextsms.onrender.com/admin/payments",
+        "https://next-sms-ten.vercel.app/admin/payments",
         {
           method: "GET",
           credentials: "include", // 🔥 This sends cookies to backend
@@ -95,7 +95,7 @@ export default function PaymentManagement() {
 
  const handleMarkAsPaid = async (id: string) => {
   try {
-    const response = await fetch(`https://nextsms.onrender.com/admin/payments/mark/${id}`, {
+    const response = await fetch(`https://next-sms-ten.vercel.app/admin/payments/mark/${id}`, {
       method: "PUT",
       credentials: "include",
     });

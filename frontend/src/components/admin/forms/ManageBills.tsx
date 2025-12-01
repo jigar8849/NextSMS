@@ -17,7 +17,7 @@ export default function BillManagement() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const BASE_URL = "https://nextsms.onrender.com";
+  const BASE_URL = "https://next-sms-ten.vercel.app";
 
   useEffect(() => {
     const fetchBills = async () => {

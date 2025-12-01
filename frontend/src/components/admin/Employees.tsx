@@ -51,7 +51,7 @@ export default function EmployeeManagement() {
         setError(null);
 
         const response = await fetch(
-          "https://nextsms.onrender.com/admin/employees",
+          "https://next-sms-ten.vercel.app/admin/employees",
           {
             method: "GET",
             credentials: "include", // ✔ Send cookies (required)

@@ -75,7 +75,7 @@ export default function ComplaintsPage() {
       try {
         setLoading(true);
         setError(null);
-        const response = await fetch('https://nextsms.onrender.com/resident/complaints', {
+        const response = await fetch('https://next-sms-ten.vercel.app/resident/complaints', {
           method: 'GET',
           credentials: 'include', // Include cookies for session
         });
@@ -108,7 +108,7 @@ export default function ComplaintsPage() {
 
   const removeComplaint = async (id: string) => {
     try {
-      const response = await fetch(`https://nextsms.onrender.com/resident/complaints/${id}`, {
+      const response = await fetch(`https://next-sms-ten.vercel.app/resident/complaints/${id}`, {
         method: 'DELETE',
         credentials: 'include',
       });

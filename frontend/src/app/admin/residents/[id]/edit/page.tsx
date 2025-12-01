@@ -63,7 +63,7 @@ export default async function EditResidentPage({ params }: PageProps) {
             </a>
 
             <a
-              href={`http://localhost:3000/admin/residents/${id}/edit`}
+              href={`https://next-sms-ten.vercel.app/admin/residents/${id}/edit`}
               target="_blank"
               rel="noopener noreferrer"
               className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"

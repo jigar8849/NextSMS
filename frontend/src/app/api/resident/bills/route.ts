@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function GET(request: NextRequest) {
   try {
     // Fetch data from backend API
-    const backendUrl = process.env.BACKEND_URL || 'https://nextsms.onrender.com';
+    const backendUrl = process.env.BACKEND_URL || 'https://next-sms-ten.vercel.app';
     const response = await fetch(`${backendUrl}/resident/bills`, {
       method: 'GET',
       headers: {

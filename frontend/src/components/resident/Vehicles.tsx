@@ -53,7 +53,7 @@ useEffect(() => {
   const fetchParkingData = async () => {
     try {
       const response = await fetch(
-        'https://nextsms.onrender.com/resident/parking',
+        'https://next-sms-ten.vercel.app/resident/parking',
         {
           method: 'GET',
           credentials: 'include', // ✅ include cookies for authentication

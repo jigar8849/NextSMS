@@ -45,8 +45,8 @@ app.use(limiter);
 // CORS configuration — must match deployed frontend URL
 app.use(cors({
   origin: [
-    "https://nextsms-1.onrender.com",
-    "https://nextsms.onrender.com"
+    "https://next-sms-frontend-6mwm.vercel.app/",
+    "https://next-sms-ten.vercel.app"
   ],
   credentials: true
 }));
@@ -133,7 +133,7 @@ mongoose.connect(config.mongoUri, {
   console.log(`✓ Environment: ${config.nodeEnv}`);
   app.listen(config.port, () => {
     console.log(`✓ Server running on port ${config.port}`);
-    console.log(`✓ Frontend URL: https://nextsms-1.onrender.com`);
+    console.log(`✓ Frontend URL: https://next-sms-frontend-6mwm.vercel.app`);
   });
 })
 .catch((err) => {

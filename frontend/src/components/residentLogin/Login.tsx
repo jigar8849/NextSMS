@@ -35,7 +35,7 @@ export default function ResidentLogin({ error, success }: Props) {
     setLoading(true);
 
     try {
-      const backendUrl = "https://nextsms.onrender.com";
+      const backendUrl = "https://next-sms-ten.vercel.app";
 
       const res = await fetch(`${backendUrl}/admin/resident-login`, {
         method: "POST",
