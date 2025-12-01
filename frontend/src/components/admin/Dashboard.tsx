@@ -21,7 +21,7 @@ const Dashboard = () => {
    useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const response = await fetch('https://nextsms-backend.onrender.com/admin/dashboard', {
+        const response = await fetch('https://next-sms-ten.vercel.app/admin/dashboard', {
           method: 'GET',
           credentials: 'include', // for cookies/session
         });
