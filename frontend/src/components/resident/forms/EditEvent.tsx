@@ -30,7 +30,7 @@ export default function EditEventPage() {
   useEffect(() => {
     const fetchEvent = async () => {
       try {
-        const response = await fetch(`https://next-sms-ten.vercel.app/resident/events/${eventId}`, {
+        const response = await fetch(`https://nextsms.onrender.com/resident/events/${eventId}`, {
           credentials: 'include',
         });
 
@@ -68,7 +68,7 @@ export default function EditEventPage() {
     setMessage(null);
 
     try {
-      const response = await fetch(`https://next-sms-ten.vercel.app/resident/events/${eventId}`, {
+      const response = await fetch(`http://localhost:3001/resident/api/events/${eventId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

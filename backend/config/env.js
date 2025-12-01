@@ -13,7 +13,7 @@ const requiredEnvVars = [
 const optionalEnvVars = {
   PORT: '5000',
   NODE_ENV: 'development',
-  FRONTEND_URL: 'https://next-sms-frontend-6mwm.vercel.app'
+  FRONTEND_URL: 'http://localhost:3000'
 };
 
 /**

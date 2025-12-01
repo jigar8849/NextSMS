@@ -36,7 +36,7 @@ export default function SocietyStaffPage() {
       try {
         setLoading(true);
         setError(null);
-        const response = await fetch('https://next-sms-ten.vercel.app/resident/employees', {
+        const response = await fetch('https://nextsms.onrender.com/resident/employees', {
           method: 'GET',
           headers: {
             'Accept': 'application/json',

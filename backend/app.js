@@ -3,7 +3,6 @@ require('dotenv').config();
 
 // Validate environment and load config
 const config = require('./config/env');
-const MongoStore = require("connect-mongo");
 
 const express = require('express');
 const mongoose = require('mongoose');
@@ -25,7 +24,6 @@ const adminRoutes = require('./routes/admin');
 const residentRoutes = require('./routes/resident');
 
 const app = express();
-const MONGO_URI = process.env.MONGODB_URI;
 
 // REQUIRED for Render reverse proxy
 app.set('trust proxy', 1);
@@ -47,7 +45,7 @@ app.use(limiter);
 // CORS configuration — must match deployed frontend URL
 app.use(cors({
   origin: [
-    "https://next-sms-frontend-6mwm.vercel.app",
+    "https://next-sms-frontend-6mwm.vercel.app/",
     "https://next-sms-ten.vercel.app"
   ],
   credentials: true
@@ -62,25 +60,18 @@ app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 app.use(requestLogger);
 
 // Session configuration — required for cross-domain cookie
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    store: MongoStore.create({
-      mongoUrl: process.env.MONGODB_URI,
-      collectionName: "sessions",
-      ttl: 14 * 24 * 60 * 60,
-    }),
-    cookie: {
-      secure: process.env.NODE_ENV === "production",
-      httpOnly: true,
-      sameSite: "none",
-      maxAge: 24 * 60 * 60 * 1000,
-    },
-  })
-);
-
+app.use(session({
+  secret: config.sessionSecret,
+  resave: false,
+  saveUninitialized: false,
+  proxy: true, // <-- REQUIRED for Render HTTPS
+  cookie: {
+    secure: true, // force HTTPS cookies
+    httpOnly: true,
+    sameSite: "none",
+    maxAge: 24 * 60 * 60 * 1000
+  }
+}));
 
 
 // Passport configuration

@@ -84,7 +84,7 @@ export default function ResidentDashboard() {
     const fetchDashboardData = async () => {
       try {
         // Fetch dashboard stats
-        const statsResponse = await fetch('https://next-sms-ten.vercel.app/resident/dashboard/stats', {
+        const statsResponse = await fetch('https://nextsms.onrender.com/resident/dashboard/stats', {
           method: 'GET',
           credentials: 'include',
         });
@@ -93,7 +93,7 @@ export default function ResidentDashboard() {
         const statsData = await statsResponse.json();
 
         // Fetch profile data for resident name
-        const profileResponse = await fetch('https://next-sms-ten.vercel.app/resident/profile', {
+        const profileResponse = await fetch('https://nextsms.onrender.com/resident/profile', {
           method: 'GET',
           credentials: 'include',
         });

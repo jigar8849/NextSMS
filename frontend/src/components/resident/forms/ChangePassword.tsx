@@ -54,7 +54,7 @@ export default function ChangePasswordPage() {
         throw new Error('New password must be at least 6 characters long');
       }
 
-      const response = await fetch('https://next-sms-ten.vercel.app/resident/change-password', {
+      const response = await fetch('https://nextsms.onrender.com/resident/change-password', {
         method: 'PUT',
         credentials: 'include',
         headers: {

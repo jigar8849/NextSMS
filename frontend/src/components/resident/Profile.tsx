@@ -35,7 +35,7 @@ export default function ProfilePage() {
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
-        const response = await fetch('https://next-sms-ten.vercel.app/resident/profile', {
+        const response = await fetch('https://nextsms.onrender.com/resident/profile', {
           method: 'GET',
           credentials: 'include',
         });

@@ -38,7 +38,7 @@ export default function NewEventPage() {
         endTime: form.endTime,
       });
 
-      const response = await fetch(`https://next-sms-ten.vercel.app/resident/events/availability?${params}`, {
+      const response = await fetch(`https://nextsms.onrender.com/resident/events/availability?${params}`, {
         method: 'GET',
         credentials: 'include',
       });
@@ -71,7 +71,7 @@ export default function NewEventPage() {
     }
 
     try {
-      const response = await fetch('https://next-sms-ten.vercel.app/resident/events', {
+      const response = await fetch('https://nextsms.onrender.com/resident/events', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

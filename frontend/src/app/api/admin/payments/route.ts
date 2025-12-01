@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function GET(request: NextRequest) {
   try {
     // Fetch data from backend API
-    const backendUrl = process.env.BACKEND_URL || 'https://next-sms-ten.vercel.app';
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
     const response = await fetch(`${backendUrl}/admin/payments`, {
       method: 'GET',
       headers: {
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Call backend API to create bill
-    const backendUrl = process.env.BACKEND_URL || 'https://next-sms-ten.vercel.app';
+    const backendUrl = process.env.BACKEND_URL || 'https://nextsms.onrender.com';
     const response = await fetch(`${backendUrl}/admin/createBill`, {
       method: 'POST',
       headers: {
@@ -76,7 +76,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Call backend API to mark as paid
-    const backendUrl = process.env.BACKEND_URL || 'https://next-sms-ten.vercel.app';
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
     const response = await fetch(`${backendUrl}/admin/payments/mark/${id}`, {
       method: 'GET', // Backend uses GET for marking paid
       headers: {

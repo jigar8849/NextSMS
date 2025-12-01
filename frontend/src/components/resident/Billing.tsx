@@ -35,7 +35,7 @@ export default function Billing() {
     const fetchBills = async () => {
       try {
         const response = await fetch(
-          "https://next-sms-ten.vercel.app/resident/bills",
+          "https://nextsms.onrender.com/resident/bills",
           {
             method: "GET",
             credentials: "include", // very important
@@ -130,7 +130,7 @@ export default function Billing() {
 
     try {
       const res = await fetch(
-        "https://next-sms-ten.vercel.app/resident/payment/order",
+        "https://nextsms.onrender.com/resident/payment/order",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -154,7 +154,7 @@ export default function Billing() {
         handler: async (resp: Record<string, string>) => {
           try {
             const verifyResp = await fetch(
-              "https://next-sms-ten.vercel.app/resident/payment/verify",
+              "https://nextsms.onrender.com/resident/payment/verify",
               {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },

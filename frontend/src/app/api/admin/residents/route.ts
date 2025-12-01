@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
 
     // Fetch data from backend API with pagination
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://next-sms-ten.vercel.app';
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://nextsms.onrender.com';
     const response = await fetch(`${backendUrl}/admin/api/residents?page=${page}&limit=${limit}`, {
       method: 'GET',
       headers: {
@@ -60,7 +60,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Call backend DELETE API
-    const backendUrl = process.env.BACKEND_URL || 'https://next-sms-ten.vercel.app';
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
     const response = await fetch(`${backendUrl}/admin/residents/${id}`, {
       method: 'DELETE',
       headers: {

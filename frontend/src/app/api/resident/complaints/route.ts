@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
-    const backendUrl = process.env.BACKEND_URL || 'https://next-sms-ten.vercel.app';
+    const backendUrl = process.env.BACKEND_URL || 'https://nextsms.onrender.com';
     const response = await fetch(`${backendUrl}/resident/api/complaints`, {
         method: 'GET',
         headers: {
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     try {
-        const backendUrl = process.env.BACKEND_URL || 'https://next-sms-ten.vercel.app';
+        const backendUrl = process.env.BACKEND_URL || 'https://nextsms.onrender.com';
         const body = await request.json();
 
         const response = await fetch(`${backendUrl}/resident/api/complaints`, {
