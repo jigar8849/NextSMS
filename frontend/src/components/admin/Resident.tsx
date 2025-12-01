@@ -25,12 +25,11 @@ export default function ResidentsPage() {
     null
   );
 
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://next-sms-ten.vercel.app';
 
   const fetchResidents = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${backendUrl}/admin/residents`, {
+      const response = await fetch(`https://next-sms-ten.vercel.app/admin/residents`, {
         credentials: "include",
       });
       if (!response.ok) {

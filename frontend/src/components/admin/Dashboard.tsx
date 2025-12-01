@@ -1,4 +1,3 @@
-// app/dashboard/page.tsx (or pages/dashboard.tsx)
 'use client';
 
 import { FaUsers, FaCreditCard, FaExclamationCircle, FaCar, FaUserCog } from "react-icons/fa";
@@ -19,16 +18,18 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const response = await fetch(`https://next-sms-ten.vercel.app/admin/dashboard`, {
+        const response = await fetch('https://nextsms-backend.onrender.com/admin/dashboard', {
           method: 'GET',
-          credentials: 'include',
+          credentials: 'include', // for cookies/session
         });
+
         if (!response.ok) {
-          throw new Error('Failed to fetch dashboard data');
+          throw new Error(`Failed to fetch dashboard data (${response.status})`);
         }
+
         const dashboardData = await response.json();
         setData(dashboardData);
       } catch (err) {
