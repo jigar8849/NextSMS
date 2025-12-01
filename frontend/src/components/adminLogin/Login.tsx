@@ -42,10 +42,8 @@ export default function AdminLogin({ error, success }: Props) {
     setLoading(true);
 
     try {
-      // 🔥 Direct URL (No ENV needed)
-      const backendUrl = "https://nextsms.onrender.com";
-
-      const res = await fetch(`${backendUrl}/admin/login`, {
+      
+      const res = await fetch(`https://next-sms-ten.vercel.app/admin/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
