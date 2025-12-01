@@ -8,7 +8,7 @@ export async function DELETE(
     // Await the params promise to get the actual id
     const { id } = await params;
     
-    const backendUrl = process.env.BACKEND_URL || 'https://nextsms.onrender.com';
+    const backendUrl = process.env.BACKEND_URL || 'https://next-sms-ten.vercel.app';
     const response = await fetch(`${backendUrl}/resident/api/complaints/${id}`, {
       method: 'DELETE',
       headers: {

@@ -28,10 +28,10 @@ export default function Navbar({ setSidebarOpen }: NavbarProps) {
   async function validateRole() {
     try {
       const responses = [
-        fetch("https://nextsms.onrender.com/admin/profile", {
+        fetch("https://next-sms-ten.vercel.app/admin/profile", {
           credentials: "include",
         }),
-        fetch("https://nextsms.onrender.com/resident/profile", {
+        fetch("https://next-sms-ten.vercel.app/resident/profile", {
           credentials: "include",
         }),
       ];

@@ -25,7 +25,7 @@ export default function NewComplaintPage() {
 
     try {
       const response = await fetch(
-        "https://nextsms.onrender.com/resident/complaints",
+        "https://next-sms-ten.vercel.app/resident/complaints",
         {
           method: "POST",
           credentials: "include",

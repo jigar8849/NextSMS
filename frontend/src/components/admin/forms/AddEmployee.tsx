@@ -15,7 +15,7 @@ type EmployeeStatus = 'Active' | 'Inactive';
 export default function AddEmployeeForm() {
   const router = useRouter();
 
-  const API_BASE = 'https://nextsms.onrender.com'; // <-- Backend URL
+  const API_BASE = 'https://next-sms-ten.vercel.app'; // <-- Backend URL
   const API_PATH = '/admin/addNewEmployee';
 
   const [name, setName] = useState('');

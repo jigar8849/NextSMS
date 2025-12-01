@@ -152,7 +152,7 @@ export default function CreateSocietyAccount({ error, success }: Props) {
     setLoading(true);
 
     try {
-      const res = await fetch("https://nextsms.onrender.com/admin/create-account", {
+      const res = await fetch("https://next-sms-ten.vercel.app/admin/create-account", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

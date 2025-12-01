@@ -43,7 +43,7 @@ export default function EditProfilePage() {
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
-        const response = await fetch('https://nextsms.onrender.com/resident/profile', {
+        const response = await fetch('https://next-sms-ten.vercel.app/resident/profile', {
           method: 'GET',
           credentials: 'include',
         });
@@ -111,7 +111,7 @@ export default function EditProfilePage() {
         throw new Error('Please fill in all required fields');
       }
 
-      const response = await fetch('https://nextsms.onrender.com/resident/profile', {
+      const response = await fetch('https://next-sms-ten.vercel.app/resident/profile', {
         method: 'PUT',
         credentials: 'include',
         headers: {

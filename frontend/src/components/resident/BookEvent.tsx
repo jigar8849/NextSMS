@@ -71,7 +71,7 @@ export default function EventsPage() {
       try {
         setIsLoading(true);
         setError(null);
-        const response = await fetch('https://nextsms.onrender.com/resident/events', {
+        const response = await fetch('https://next-sms-ten.vercel.app/resident/events', {
           credentials: 'include', // Include cookies for session
         });
 
@@ -95,7 +95,7 @@ export default function EventsPage() {
 
   const removeEvent = async (id: string) => {
     try {
-      const response = await fetch(`https://nextsms.onrender.com/resident/events/${id}`, {
+      const response = await fetch(`https://next-sms-ten.vercel.app/resident/events/${id}`, {
         method: 'DELETE',
         credentials: 'include',
       });

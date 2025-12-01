@@ -46,7 +46,7 @@ export default function ParkingManagement() {
  useEffect(() => {
   const fetchParkingData = async () => {
     try {
-      const response = await fetch('https://nextsms.onrender.com/admin/parking', {
+      const response = await fetch('https://next-sms-ten.vercel.app/admin/parking', {
         method: 'GET',
         credentials: 'include'  // ✅ send cookies
       });

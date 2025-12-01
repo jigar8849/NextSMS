@@ -68,7 +68,7 @@ export default function EditEventPage() {
     setMessage(null);
 
     try {
-      const response = await fetch(`http://localhost:3001/resident/api/events/${eventId}`, {
+      const response = await fetch(`https://next-sms-ten.vercel.app/resident/api/events/${eventId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

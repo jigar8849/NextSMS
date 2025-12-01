@@ -60,7 +60,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Call backend DELETE API
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
+    const backendUrl = process.env.BACKEND_URL || 'https://next-sms-ten.vercel.app';
     const response = await fetch(`${backendUrl}/admin/residents/${id}`, {
       method: 'DELETE',
       headers: {
