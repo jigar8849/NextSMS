@@ -22,8 +22,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://next-sms-ten.vercel.app';
-        const response = await fetch(`${backendUrl}/admin/dashboard`, {
+        const response = await fetch(`https://next-sms-ten.vercel.app/admin/dashboard`, {
           method: 'GET',
           credentials: 'include',
         });

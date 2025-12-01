@@ -31,8 +31,7 @@ type MemberPayload = {
 export default function AddNewMemberForm({ apiPath }: Props) {
   const router = useRouter();
 
-  const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'https://next-sms-ten.vercel.app';
-  const API_PATH = apiPath || '/admin/addNewResident';
+
 
   // Form states
   const [first_name, setFirstName] = useState('');
@@ -145,7 +144,7 @@ export default function AddNewMemberForm({ apiPath }: Props) {
     setLocalSuccess(null);
 
     try {
-      const res = await fetch(`${API_BASE}${API_PATH}`, {
+      const res = await fetch(`https://next-sms-ten.vercel.app/admin/addNewResident`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
