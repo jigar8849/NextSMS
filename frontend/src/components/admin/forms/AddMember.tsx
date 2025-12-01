@@ -31,7 +31,7 @@ type MemberPayload = {
 export default function AddNewMemberForm({ apiPath }: Props) {
   const router = useRouter();
 
-  const API_BASE = process.env.NEXT_PUBLIC_API_BASE || '';
+  const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'https://next-sms-ten.vercel.app';
   const API_PATH = apiPath || '/admin/addNewResident';
 
   // Form states
