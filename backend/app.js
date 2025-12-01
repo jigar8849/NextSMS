@@ -3,6 +3,7 @@ require('dotenv').config();
 
 // Validate environment and load config
 const config = require('./config/env');
+const MongoStore = require("connect-mongo");
 
 const express = require('express');
 const mongoose = require('mongoose');
@@ -45,7 +46,7 @@ app.use(limiter);
 // CORS configuration — must match deployed frontend URL
 app.use(cors({
   origin: [
-    "https://next-sms-frontend-6mwm.vercel.app/",
+    "https://next-sms-frontend-6mwm.vercel.app",
     "https://next-sms-ten.vercel.app"
   ],
   credentials: true
@@ -64,14 +65,19 @@ app.use(session({
   secret: config.sessionSecret,
   resave: false,
   saveUninitialized: false,
-  proxy: true, // <-- REQUIRED for Render HTTPS
+  proxy: true, // Required for Render HTTPS
+  store: MongoStore.create({
+    mongoUrl: config.mongoUri,
+    ttl: 24 * 60 * 60 // 1 day
+  }),
   cookie: {
-    secure: true, // force HTTPS cookies
+    secure: config.isProduction, // only secure in prod
     httpOnly: true,
     sameSite: "none",
     maxAge: 24 * 60 * 60 * 1000
   }
 }));
+
 
 
 // Passport configuration
