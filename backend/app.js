@@ -67,15 +67,16 @@ app.use(
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    store: MongoStore({
-      mongoUrl: MONGO_URI,
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGODB_URI,
       collectionName: "sessions",
-      ttl: 14 * 24 * 60 * 60, // 14 days (optional)
+      ttl: 14 * 24 * 60 * 60,
     }),
     cookie: {
       secure: process.env.NODE_ENV === "production",
       httpOnly: true,
-      sameSite: "lax",
+      sameSite: "none",
+      maxAge: 24 * 60 * 60 * 1000,
     },
   })
 );
