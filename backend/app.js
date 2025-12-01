@@ -45,7 +45,7 @@ app.use(limiter);
 // CORS configuration — must match deployed frontend URL
 app.use(cors({
   origin: [
-    "https://next-sms-frontend-6mwm.vercel.app/",
+    "https://next-sms-frontend-6mwm.vercel.app",
     "https://next-sms-ten.vercel.app"
   ],
   credentials: true
