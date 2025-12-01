@@ -73,7 +73,7 @@ export default function ResidentsPage() {
 
     try {
       const response = await fetch(
-        `${backendUrl}/admin/residents/${residentToDelete._id}`,
+        `https://next-sms-ten.vercel.app/admin/residents/${residentToDelete._id}`,
         {
           method: "DELETE",
           credentials: "include",
