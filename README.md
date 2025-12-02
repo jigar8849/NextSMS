@@ -269,9 +269,8 @@ For support or questions, please contact the development team or create an issue
 
 
 
-
-
 <!-- 
+
 // Load environment variables first
 require('dotenv').config();
 
@@ -287,6 +286,10 @@ const rateLimit = require('express-rate-limit');
 const session = require('express-session');
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
+
+// ⬇️ Added imports
+const favicon = require('serve-favicon');
+const path = require('path');
 
 // Import middleware
 const requestLogger = require('./middleware/requestLogger');
@@ -316,15 +319,8 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// CORS configuration — must match deployed frontend URL
-app.use(cors({
-  origin: [
-    "https://next-sms-frontend-6mwm.vercel.app",
-    "https://next-sms-ten.vercel.app"
-  ],
-  credentials: true
-}));
-
+// ⬇️ Add favicon here BEFORE routes
+app.use(favicon(path.join(__dirname, "public", "favicon.ico")));
 
 // Body parsing middleware
 app.use(express.json({ limit: '1mb' }));
@@ -333,22 +329,21 @@ app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 // Request logging middleware
 app.use(requestLogger);
 
-// Session configuration — required for cross-domain cookie
+// Session configuration — must be BEFORE CORS + Passport
 app.use(session({
   secret: config.sessionSecret,
   resave: false,
   saveUninitialized: false,
-  proxy: true, // <-- REQUIRED for Render HTTPS
+  proxy: true, // REQUIRED for HTTPS (Render)
   cookie: {
-    secure: true, // force HTTPS cookies
+    secure: true, // must be true in production HTTPS
     httpOnly: true,
     sameSite: "none",
-    maxAge: 24 * 60 * 60 * 1000
+    maxAge: 24 * 60 * 60 * 1000 // 1 day
   }
 }));
 
-
-// Passport configuration
+// Passport configuration BEFORE CORS
 app.use(passport.initialize());
 app.use(passport.session());
 const SocitySetUp = require('./models/socitySetUp');
@@ -359,6 +354,7 @@ passport.use(PASSPORT_STRATEGIES.RESIDENT, new LocalStrategy({ usernameField: 'e
 passport.serializeUser((user, done) => {
   done(null, { id: user._id, type: user.constructor.modelName });
 });
+
 passport.deserializeUser(async (serializedUser, done) => {
   try {
     const { id, type } = serializedUser;
@@ -376,6 +372,15 @@ passport.deserializeUser(async (serializedUser, done) => {
     done(err);
   }
 });
+
+// CORS configuration AFTER session + passport for cookies to attach properly
+app.use(cors({
+  origin: [
+    "https://next-sms-frontend-6mwm.vercel.app",
+    "https://next-sms-ten.vercel.app"
+  ],
+  credentials: true
+}));
 
 // Routes
 app.use('/admin', adminRoutes);
@@ -414,6 +419,5 @@ mongoose.connect(config.mongoUri, {
   console.error('✗ MongoDB connection error:', err);
   process.exit(1);
 });
-
 
 module.exports = app; -->
