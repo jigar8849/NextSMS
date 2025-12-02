@@ -14,6 +14,10 @@ const session = require('express-session');
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 
+// ⬇️ Added imports
+const favicon = require('serve-favicon');
+const path = require('path');
+
 // Import middleware
 const requestLogger = require('./middleware/requestLogger');
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
@@ -41,6 +45,9 @@ const limiter = rateLimit({
   message: 'Too many requests from this IP, please try again later.'
 });
 app.use(limiter);
+
+// ⬇️ Add favicon here BEFORE routes
+app.use(favicon(path.join(__dirname, "public", "favicon.ico")));
 
 // Body parsing middleware
 app.use(express.json({ limit: '1mb' }));
