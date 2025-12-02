@@ -46,7 +46,7 @@ app.use(compression());
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
-  message: 'Too many requests from this IP, please try again later.'
+  message: 'Too many requests from this IP, please try later.'
 });
 app.use('/api/', limiter);
 
@@ -68,15 +68,48 @@ const allowedOrigins = [
 ];
 
 app.use(cors({
-  origin: allowedOrigins,
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      return callback(null, true);
+    } else {
+      console.log('Blocked by CORS:', origin);
+      return callback(new Error('Not allowed by CORS'), false);
+    }
+  },
   credentials: true,
   exposedHeaders: ['set-cookie'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 }));
 
 // Handle preflight requests
 app.options('*', cors());
+
+// ========== HELPER FUNCTION FOR COOKIE DOMAIN ==========
+function getCookieDomain(req) {
+  const origin = req.headers.origin;
+  if (!origin) return undefined;
+  
+  try {
+    const url = new URL(origin);
+    const hostname = url.hostname;
+    
+    // For localhost, no domain needed
+    if (hostname === 'localhost') return undefined;
+    
+    // For Vercel deployments
+    if (hostname.endsWith('.vercel.app')) {
+      return '.vercel.app'; // Wildcard domain for all Vercel subdomains
+    }
+    
+    return undefined;
+  } catch (err) {
+    return undefined;
+  }
+}
 
 // ========== SESSION CONFIGURATION ==========
 // Create MongoStore instance
@@ -96,12 +129,12 @@ app.use(session({
   cookie: {
     secure: true, // MUST be true in production for HTTPS
     httpOnly: true,
-    sameSite: 'none', // MUST be 'none' for cross-origin in production
+    sameSite: 'none', // CRITICAL for cross-origin
     maxAge: 24 * 60 * 60 * 1000, // 1 day
-    path: '/',
-    // domain: 'vercel.app' // Don't set domain unless you own it
+    path: '/', // Available on all paths
+    domain: getCookieDomain // Dynamic domain based on request
   },
-  name: 'sms_session' // Custom session cookie name
+  name: 'sms_auth' // Simpler name
 }));
 
 // ========== PASSPORT CONFIGURATION ==========
@@ -151,7 +184,52 @@ passport.deserializeUser(async (serializedUser, done) => {
   }
 });
 
-// ========== DEBUG ENDPOINTS (Remove in Production if needed) ==========
+// ========== TEST ENDPOINTS ==========
+app.get('/set-test-cookies', (req, res) => {
+  // Test 1: Cookie with explicit domain
+  res.cookie('test_with_domain', 'value1', {
+    secure: true,
+    httpOnly: false, // Set to false so we can see it
+    sameSite: 'none',
+    domain: '.vercel.app', // Explicit domain
+    path: '/',
+    maxAge: 3600000
+  });
+  
+  // Test 2: Cookie without domain (defaults to backend domain)
+  res.cookie('test_no_domain', 'value2', {
+    secure: true,
+    httpOnly: false,
+    sameSite: 'none',
+    path: '/',
+    maxAge: 3600000
+  });
+  
+  // Test 3: Regular session cookie simulation
+  res.cookie('auth_session', 'session_' + Date.now(), {
+    secure: true,
+    httpOnly: true,
+    sameSite: 'none',
+    domain: '.vercel.app',
+    path: '/',
+    maxAge: 3600000
+  });
+  
+  res.json({
+    message: 'Test cookies set',
+    instructions: 'Check Application tab → Cookies → https://next-sms-frontend-6mwm.vercel.app',
+    cookies_set: ['test_with_domain', 'test_no_domain', 'auth_session']
+  });
+});
+
+app.get('/check-cookies', (req, res) => {
+  res.json({
+    cookies_received: req.headers.cookie || 'No cookies',
+    session_id: req.sessionID,
+    origin: req.headers.origin
+  });
+});
+
 app.get('/debug/session', (req, res) => {
   res.json({
     sessionId: req.sessionID,
@@ -167,6 +245,7 @@ app.get('/debug/cookies', (req, res) => {
     httpOnly: false, // Visible in JavaScript for debugging
     secure: true,
     sameSite: 'none',
+    domain: '.vercel.app', // Add domain here too
     maxAge: 3600000,
     path: '/'
   });
@@ -193,7 +272,8 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     session: {
       id: req.sessionID,
-      exists: !!req.session
+      exists: !!req.session,
+      cookie_domain: req.session.cookie.domain
     },
     cors: {
       origins: allowedOrigins
@@ -207,8 +287,12 @@ app.get('/', (req, res) => {
     message: 'SMS Backend API',
     version: '1.0.0',
     docs: 'Coming soon...',
-    health: '/health',
-    debug: '/debug/session'
+    endpoints: {
+      health: '/health',
+      debug: '/debug/session',
+      test_cookies: '/set-test-cookies',
+      check_cookies: '/check-cookies'
+    }
   });
 });
 
@@ -232,21 +316,29 @@ mongoose.connect(config.mongoUri, {
   allowedOrigins.forEach(origin => console.log(`  - ${origin}`));
   
   app.listen(config.port, () => {
-    console.log('\n' + '='.repeat(50));
-    console.log('🚀 Server Started Successfully!');
-    console.log('='.repeat(50));
+    console.log('\n' + '='.repeat(60));
+    console.log('🚀 SMS Backend Server Started Successfully!');
+    console.log('='.repeat(60));
     console.log(`📡 Server URL: http://localhost:${config.port}`);
     console.log(`🌐 Public URL: (Your Render/Server URL)`);
-    console.log(`🖥️  Frontend URL: ${process.env.FRONTEND_URL}`);
-    console.log(`🍪 Session Cookie: sms_session`);
+    console.log(`🖥️  Frontend URL: ${process.env.FRONTEND_URL || 'Not set'}`);
+    console.log(`🍪 Session Cookie: sms_auth`);
     console.log(`🔒 Secure: true (HTTPS only)`);
     console.log(`🎯 SameSite: none (Cross-origin enabled)`);
+    console.log(`🌍 Cookie Domain: Dynamic (.vercel.app for Vercel)`);
     console.log(`📊 Session Store: MongoDB`);
-    console.log('='.repeat(50));
+    console.log('='.repeat(60));
     console.log('\n📋 Test Endpoints:');
-    console.log(`   Health:   ${process.env.FRONTEND_URL ? 'https://' + process.env.FRONTEND_URL.split('//')[1] : 'Your server'}/health`);
-    console.log(`   Debug:    ${process.env.FRONTEND_URL ? 'https://' + process.env.FRONTEND_URL.split('//')[1] : 'Your server'}/debug/cookies`);
-    console.log('='.repeat(50));
+    console.log(`   1. Health Check:  /health`);
+    console.log(`   2. Cookie Test:   /set-test-cookies`);
+    console.log(`   3. Debug Session: /debug/session`);
+    console.log(`   4. Check Cookies: /check-cookies`);
+    console.log('='.repeat(60));
+    console.log('\n🔧 To Test Cookies:');
+    console.log(`   1. Visit: https://YOUR-BACKEND.com/set-test-cookies`);
+    console.log(`   2. Check DevTools → Application tab → Cookies`);
+    console.log(`   3. Look for cookies under: next-sms-frontend-6mwm.vercel.app`);
+    console.log('='.repeat(60));
   });
 })
 .catch((err) => {
